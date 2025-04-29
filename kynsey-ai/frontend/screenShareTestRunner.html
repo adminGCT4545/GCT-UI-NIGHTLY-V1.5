@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen Share Tests</title>
+    <style>
+        .control-button {
+            padding: 8px 16px;
+            margin: 0 8px;
+            background-color: #3d3d3e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .control-button:hover {
+            background-color: #4d4d4e;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-controls {
+            margin-bottom: 20px;
+        }
+        .test-output {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .test-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .metric-card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="test-panel">
+        <h1>Screen Share Testing Suite</h1>
+        <!-- Screen Share Controls -->
+        <div class="screen-share-controls" style="margin-bottom: 20px; padding: 15px; background: #2a2a2a; border-radius: 8px;">
+            <button id="startScreenShare" class="control-button">Start Screen Share</button>
+            <button id="stopScreenShare" class="control-button">Stop Screen Share</button>
+            <button id="toggleRecording" class="control-button">Toggle Recording</button>
+            <div id="annotationTools" style="margin-top: 10px;">
+                <button data-tool="pen" class="control-button">Pen</button>
+                <button data-tool="arrow" class="control-button">Arrow</button>
+                <button data-tool="rectangle" class="control-button">Rectangle</button>
+                <button data-tool="highlight" class="control-button">Highlight</button>
+            </div>
+            <canvas id="annotationCanvas" style="display: none;"></canvas>
+        </div>
+        <div class="test-controls">
+            <button onclick="runTests()">Run All Tests</button>
+            <button onclick="clearOutput()">Clear Output</button>
+        </div>
+        <div class="test-metrics">
+            <div class="metric-card">
+                <h3>Memory Usage</h3>
+                <div id="memoryMetrics">Waiting for tests...</div>
+            </div>
+            <div class="metric-card">
+                <h3>Event Listeners</h3>
+                <div id="eventMetrics">Waiting for tests...</div>
+            </div>
+            <div class="metric-card">
+                <h3>Test Results</h3>
+                <div id="testMetrics">Waiting for tests...</div>
+            </div>
+        </div>
+        <div class="test-output" id="output"></div>
+    </div>
+
+    <!-- Include screen share implementation -->
+    <script src="./screenShare.js"></script>
+    
+    <!-- Include the test script -->
+    <script src="./screenShareTests.js"></script>
+
+    <!-- Mock navigator.mediaDevices.getDisplayMedia -->
+    <script>
+        if (!navigator.mediaDevices) {
+            navigator.mediaDevices = {};
+        }
+
+        navigator.mediaDevices.getDisplayMedia = async function() {
+            const mockStream = new MediaStream();
+            const mockTrack = new MediaStreamTrack();
+            mockStream.addTrack(mockTrack);
+            return mockStream;
+        };
+    </script>
+
+    <script>
+        // Override console.log to capture output
+        const originalLog = console.log;
+        const output = document.getElementById('output');
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            output.innerHTML += message + '\n';
+            output.scrollTop = output.scrollHeight;
+        };
+
+        // Test runner function
+        async function runTests() {
+            clearOutput();
+            console.log('Starting tests...\n');
+            
+            try {
+                await window.screenShareTests.runAllTests();
+                
+                // Update metrics
+                updateMetrics();
+            } catch (error) {
+                console.error('Test execution failed:', error);
+            }
+        }
+
+        // Update metrics display
+        function updateMetrics() {
+            if (performance.memory) {
+                document.getElementById('memoryMetrics').innerHTML = `
+                    Used Heap: ${Math.round(performance.memory.usedJSHeapSize / 1024 / 1024)}MB<br>
+                    Heap Limit: ${Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)}MB
+                `;
+            }
+
+            const results = window.screenShareTests.results;
+            const passed = results.filter(r => r.passed).length;
+            const failed = results.length - passed;
+
+            document.getElementById('testMetrics').innerHTML = `
+                Passed: <span class="success">${passed}</span><br>
+                Failed: <span class="error">${failed}</span><br>
+                Total: ${results.length}
+            `;
+
+            // Event listener metrics would be populated during tests
+            document.getElementById('eventMetrics').innerHTML = `
+                Tests completed.<br>
+                Check console for detailed event listener analysis.
+            `;
+        }
+
+        function clearOutput() {
+            output.innerHTML = '';
+            document.getElementById('memoryMetrics').innerHTML = 'Waiting for tests...';
+            document.getElementById('eventMetrics').innerHTML = 'Waiting for tests...';
+            document.getElementById('testMetrics').innerHTML = 'Waiting for tests...';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Test runner initialized.\nClick "Run All Tests" to begin testing.');
+        });
+    </script>
+</body>
+</html>

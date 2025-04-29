@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYNSEY AI - Green Chip Technology</title>
+    <style>
+        /* Modern Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        /* Header - Modern Dark Style */
+        .header {
+            background-color: #202124;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .hamburger-menu {
+            cursor: pointer;
+            padding-right: 1rem;
+        }
+
+        .hamburger-menu::before {
+            content: "☰";
+            font-size: 1.5rem;
+        }
+
+        .app-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .app-subtitle {
+            font-size: 0.8rem;
+            color: #9aa0a6;
+        }
+
+        /* Sidebar - Dark and Minimal */
+        .sidebar {
+            width: 60px;
+            background-color: #202124;
+            padding: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 1px 0 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-button {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar-button:hover {
+            opacity: 1;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-button i, .sidebar-button span {
+            font-size: 1.2rem;
+        }
+
+        /* Main Content Area - Dark Theme Chat */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 1rem;
+            max-width: 80%;
+            clear: both;
+            word-wrap: break-word; /* Ensure long words break */
+            white-space: pre-wrap; /* Preserve whitespace and wrap */
+        }
+
+        .user-message {
+            background-color: #0b84ff;
+            color: white;
+            margin-left: auto;
+            text-align: left; /* Align text left even in right-aligned bubble */
+            align-self: flex-end; /* Align bubble to the right */
+        }
+
+        .assistant-message {
+            background-color: #292a2d;
+            color: #e8e8e8;
+            align-self: flex-start;
+        }
+
+        .assistant-message img {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            display: block; /* Ensure image takes block space */
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            font-style: italic;
+            color: #9aa0a6;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #202124;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            padding: 1.5rem;
+            color: #ffffff; /* Ensure text is visible */
+        }
+
+        .settings-panel.active {
+            right: 0;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .close-settings {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .settings-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-section-title {
+            font-size: 0.9rem;
+            color: #9aa0a6;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase; /* Style consistency */
+        }
+
+        .settings-option {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            cursor: pointer;
+        }
+         .settings-option label {
+            margin-left: 0.5rem; /* Spacing between radio and label */
+            cursor: pointer;
+        }
+
+        .settings-option input[type="radio"] {
+            margin-right: 0.5rem;
+             cursor: pointer;
+             /* Custom radio button style (optional) */
+             appearance: none;
+             background-color: #3d3d3e;
+             border: 1px solid #5f6368;
+             width: 16px;
+             height: 16px;
+             border-radius: 50%;
+             display: inline-block;
+             position: relative;
+        }
+         .settings-option input[type="radio"]:checked {
+            background-color: #0b84ff;
+            border-color: #0b84ff;
+        }
+
+         .settings-option input[type="radio"]:checked::after {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+
+        #activeModelDisplay {
+            padding: 0.5rem;
+            background-color: #3d3d3e;
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        /* Image Upload Modal */
+        .image-upload-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .image-upload-modal.active {
+            display: flex; /* Show when active */
+        }
+
+        .modal-content {
+            background-color: #202124;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 500px;
+            color: #ffffff; /* Ensure text is visible */
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .image-upload-area {
+            border: 2px dashed #3d3d3e;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s ease; /* Smooth transition */
+        }
+
+        .image-upload-area:hover {
+            border-color: #0b84ff;
+        }
+
+        .image-upload-text {
+            color: #9aa0a6;
+            margin-bottom: 1rem;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin: 1rem auto; /* Center preview */
+            display: none; /* Hidden until image selected */
+            border-radius: 0.25rem; /* Slight rounding */
+        }
+
+        .image-upload-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1rem; /* Add space above buttons */
+        }
+
+        .upload-button, .cancel-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border: none;
+            font-weight: 500; /* Slightly bolder text */
+            transition: background-color 0.2s ease; /* Smooth transition */
+        }
+
+        .upload-button {
+            background-color: #0b84ff;
+            color: white;
+        }
+        .upload-button:hover {
+            background-color: #005ec4;
+        }
+        .upload-button:disabled {
+             background-color: #3d3d3e;
+             cursor: not-allowed;
+             opacity: 0.7;
+        }
+
+
+        .cancel-button {
+            background-color: #3d3d3e;
+            color: white;
+        }
+         .cancel-button:hover {
+            background-color: #5f6368;
+        }
+
+        /* Input Container - Dark Style */
+        .input-container {
+            background-color: #202124;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .input-button {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            transition: opacity 0.2s ease, background-color 0.2s ease;
+            margin-right: 2px;
+        }
+
+        .input-button:hover {
+            opacity: 1;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .input-button span {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .input-form {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end; /* Align items to bottom for multi-line textarea */
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #3d3d3e;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            resize: none;
+            background-color: #121212;
+            color: #ffffff;
+            max-height: 150px; /* Limit max height */
+            overflow-y: auto; /* Add scroll if needed */
+            line-height: 1.4; /* Improve readability */
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #0b84ff;
+            box-shadow: 0 0 0 1px #0b84ff;
+        }
+
+        .send-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #0b84ff;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease;
+            height: calc(1.5rem + 2 * 0.75rem); /* Match initial textarea height */
+            align-self: flex-end; /* Keep button aligned to bottom */
+        }
+
+        .send-button:hover {
+            background-color: #005ec4;
+        }
+        .send-button:disabled {
+             background-color: #3d3d3e;
+             cursor: not-allowed;
+             opacity: 0.7;
+        }
+
+        /* File input hidden */
+        #imageFileInput {
+            display: none;
+        }
+
+        /* Voice Input Styles */
+        .voice-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .voice-visualizer {
+            width: 300px;
+            height: 60px;
+            background-color: #121212;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .voice-options {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .voice-select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            background-color: #121212;
+            color: white;
+            border: 1px solid #3d3d3e;
+            border-radius: 0.25rem;
+        }
+
+        .command-suggestions {
+            background-color: #121212;
+            border: 1px solid #3d3d3e;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .suggestion-title {
+            color: #9aa0a6;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .command-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .command-list li {
+            padding: 0.5rem;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 0.25rem;
+        }
+
+        .command-list li:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+    </style>
+    <style>
+        /* Screen Share and Annotation Styles */
+        .screen-preview {
+            position: relative;
+            background: #121212;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .screen-share-controls {
+            background: #202124;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .annotation-tools {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            opacity: 0.3;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .annotation-tools.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .annotation-tool {
+            padding: 0.5rem;
+            background: #3d3d3e;
+            border: none;
+            border-radius: 0.25rem;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s, opacity 0.3s;
+        }
+
+        .annotation-tool:hover {
+            background: #4d4d4e;
+        }
+
+        .annotation-tool.active {
+            background: #0b84ff;
+        }
+
+        .annotation-canvas-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: #121212;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        #annotationColor {
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            background: none;
+        }
+
+        #annotationColor::-webkit-color-swatch {
+            border: none;
+            border-radius: 0.25rem;
+        }
+
+        .screen-share-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button class="sidebar-button" id="expandMenu" title="Expand menu"><span>&#9776;</span></button>
+        <button class="sidebar-button" id="newChat" title="New Chat"><span>+</span></button>
+        <button class="sidebar-button" id="documentsBtn" title="Upload Document"><span>&#128196;</span></button>
+        <button class="sidebar-button" id="imagesBtn" title="Upload Image"><span>&#128249;</span></button>
+        <button class="sidebar-button" id="emailBtn" title="Draft Email"><span>&#9993;</span></button>
+        <button class="sidebar-button" id="settingsBtn" title="Settings"><span>&#9881;</span></button>
+        <button class="sidebar-button" id="erpDashboardBtn" title="ERP Dashboard" onclick="window.location.href='/erp-dashboard'"><span>📊</span></button>
+    </div>
+
+    <div class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <!-- Hamburger can be implemented later if needed -->
+                <!-- <div class="hamburger-menu" id="hamburgerMenu"></div> -->
+                <div class="app-info">
+                    <h1 class="app-title">KYNSEY AI</h1>
+                    <p class="app-subtitle">Green Chip Technology</p>
+                </div>
+            </div>
+            <div>
+                <!-- Additional header elements can go here -->
+            </div>
+        </header>
+
+        <main class="chat-container" id="chatContainer">
+            <!-- Initial welcome message will be added by JS -->
+        </main>
+
+        <div class="input-container">
+            <form class="input-form" id="chatForm">
+                <button type="button" class="input-button" id="screenShareBtn" title="Screen Share"><span>🖥️</span></button>
+                <button type="button" class="input-button" id="searchBtn" title="Web Search"><span>&#128269;</span></button>
+                <button type="button" class="input-button" id="voiceBtn" title="Voice Input"><span>&#127897;</span></button>
+                <textarea
+                    class="message-input"
+                    id="messageInput"
+                    placeholder="Type your message here..."
+                    rows="1"
+                ></textarea>
+                <button type="submit" class="send-button" id="sendButton">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2 class="settings-title">Settings</h2>
+            <button class="close-settings" id="closeSettings">&times;</button>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-section-title">RESPONSE STYLE</h3>
+            <div class="settings-option">
+                <input type="radio" id="professionalStyle" name="responseStyle" value="professional">
+                <label for="professionalStyle">Professional</label>
+            </div>
+            <div class="settings-option">
+                <input type="radio" id="conciseStyle" name="responseStyle" value="concise">
+                <label for="conciseStyle">Concise</label>
+            </div>
+            <div class="settings-option">
+                <input type="radio" id="normalStyle" name="responseStyle" value="normal" checked>
+                <label for="normalStyle">Normal</label>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-section-title">ACTIVE MODEL</h3>
+            <!-- Model display can be updated dynamically if needed -->
+            <div id="activeModelDisplay">llama3.2:3b-instruct-fp16</div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-section-title">CONVERSATION HISTORY</h3>
+            <button id="clearHistory" style="padding: 0.5rem 1rem; background-color: #dc3545; color: white; border: none; border-radius: 0.25rem; cursor: pointer; width: 100%;">
+                Clear Conversation History
+            </button>
+        </div>
+         <div class="settings-section">
+            <h3 class="settings-section-title">ADMIN</h3>
+             <button id="goToAdmin" style="padding: 0.5rem 1rem; background-color: #3d3d3e; color: white; border: none; border-radius: 0.25rem; cursor: pointer; width: 100%;" onclick="window.location.href='admin_panel.html'">
+                Go to Admin Panel
+            </button>
+        </div>
+    </div>
+
+    <!-- Smart Suggestions Container -->
+    <div id="suggestionsContainer" style="display: none; position: absolute; bottom: 100%; left: 0; right: 0; background-color: #202124; border-radius: 0.5rem; margin: 0.5rem; padding: 0.5rem; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5); z-index: 100;">
+        <!-- Suggestions will be dynamically added here -->
+    </div>
+
+    <!-- Document Upload Modal -->
+    <div class="image-upload-modal" id="documentUploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Document</h2>
+                <button class="close-modal" id="closeDocumentModal">&times;</button>
+            </div>
+            <div class="image-upload-area" id="documentDropArea">
+                <p class="image-upload-text">Drag & drop a document or click to browse</p>
+                <input type="file" id="documentFileInput" accept=".pdf,.doc,.docx,.txt">
+            </div>
+            <div class="image-upload-buttons">
+                <button class="cancel-button" id="cancelDocumentUpload">Cancel</button>
+                <button class="upload-button" id="confirmDocumentUpload" disabled>Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Input Modal -->
+    <div class="image-upload-modal" id="voiceInputModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Voice Input</h2>
+            <button class="close-modal" id="closeVoiceModal">&times;</button>
+        </div>
+        <div style="text-align: center; padding: 2rem;">
+            <div class="voice-controls">
+                <div class="voice-visualizer" id="voiceVisualizer">
+                    <canvas id="voiceCanvas" width="300" height="60"></canvas>
+                </div>
+                <button id="startVoiceBtn" class="send-button" style="font-size: 2rem; padding: 1.5rem; border-radius: 50%; width: 80px; height: 80px;">🎤</button>
+                <p id="voiceStatus" style="margin-top: 1rem; color: #9aa0a6;">Click to start recording</p>
+                <div class="voice-options">
+                    <select id="voiceLanguage" class="voice-select">
+                        <option value="en-US">English (US)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="es-ES">Spanish</option>
+                        <option value="fr-FR">French</option>
+                        <option value="de-DE">German</option>
+                    </select>
+                    <div class="command-suggestions" id="commandSuggestions">
+                        <p class="suggestion-title">Voice Commands:</p>
+                        <ul class="command-list">
+                            <li>"New chat"</li>
+                            <li>"Clear history"</li>
+                            <li>"Upload file"</li>
+                            <li>"Search web"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Email Draft Modal -->
+    <div class="image-upload-modal" id="emailDraftModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Draft Email</h2>
+                <button class="close-modal" id="closeEmailModal">&times;</button>
+            </div>
+            <div style="padding: 1rem;">
+                <input type="text" id="emailSubject" placeholder="Subject" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; background: #121212; color: white; border: 1px solid #3d3d3e; border-radius: 0.25rem;">
+                <textarea id="emailBody" placeholder="What would you like to write about?" style="width: 100%; min-height: 200px; padding: 0.5rem; background: #121212; color: white; border: 1px solid #3d3d3e; border-radius: 0.25rem;"></textarea>
+            </div>
+            <div class="image-upload-buttons">
+                <button class="cancel-button" id="cancelEmail">Cancel</button>
+                <button class="upload-button" id="generateEmail">Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Web Search Modal -->
+    <div class="image-upload-modal" id="webSearchModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Web Search</h2>
+                <button class="close-modal" id="closeSearchModal">&times;</button>
+            </div>
+            <div style="padding: 1rem;">
+                <input type="text" id="searchQuery" placeholder="Enter your search query" style="width: 100%; padding: 0.5rem; background: #121212; color: white; border: 1px solid #3d3d3e; border-radius: 0.25rem;">
+            </div>
+            <div class="image-upload-buttons">
+                <button class="cancel-button" id="cancelSearch">Cancel</button>
+                <button class="upload-button" id="executeSearch">Search</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screen Share Modal -->
+    <div class="image-upload-modal" id="screenShareModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Screen Sharing</h2>
+                <button class="close-modal" id="closeScreenShareModal">&times;</button>
+            </div>
+            <div style="padding: 1rem;">
+                <div class="screen-share-controls">
+                    <div class="screen-preview">
+                        <video id="screenVideo" style="width: 100%; max-height: 400px; background: #121212; border-radius: 0.5rem;" autoplay muted></video>
+                    </div>
+                    <div class="screen-share-buttons" style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button id="startScreenShare" class="upload-button">Start Screen Share</button>
+                        <button id="captureScreenshot" class="upload-button" disabled>Capture Screenshot</button>
+                        <button id="toggleRecording" class="upload-button" disabled>Start Recording</button>
+                        <button id="stopScreenShare" class="cancel-button" disabled>Stop Sharing</button>
+                    </div>
+                    <div class="annotation-tools" style="margin-top: 1rem; padding: 1rem; background: #292a2d; border-radius: 0.5rem;">
+                        <h3 style="margin-bottom: 0.5rem; color: #9aa0a6;">Annotation Tools</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="annotation-tool" data-tool="pen">✏️</button>
+                            <button class="annotation-tool" data-tool="arrow">➡️</button>
+                            <button class="annotation-tool" data-tool="rectangle">⬜</button>
+                            <button class="annotation-tool" data-tool="highlight">🌟</button>
+                            <button class="annotation-tool" data-tool="text">T</button>
+                            <input type="color" id="annotationColor" value="#ff0000" title="Color">
+                            <button id="clearAnnotations" class="annotation-tool">🗑️</button>
+                        </div>
+                        <div class="annotation-canvas-container" style="position: relative; margin-top: 1rem;">
+                            <canvas id="annotationCanvas" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Upload Modal -->
+    <div class="image-upload-modal" id="imageUploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Image</h2>
+                <button class="close-modal" id="closeImageModal">&times;</button>
+            </div>
+            <div class="image-upload-area" id="dropArea">
+                <p class="image-upload-text">Drag & drop an image or click to browse</p>
+                <input type="file" id="imageFileInput" accept="image/jpeg, image/png, image/gif, image/webp">
+                <img src="" alt="Preview" class="image-preview" id="imagePreview">
+            </div>
+            <div class="image-upload-buttons">
+                <button class="cancel-button" id="cancelUpload">Cancel</button>
+                <button class="upload-button" id="confirmUpload" disabled>Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="screenShare.js"></script>
+    <script type="module">
+        // Import API functions
+        import {
+            fetchChatResponse,
+            performSearch,
+            generateEmailDraft,
+            uploadDocument,
+            processVoiceInput,
+            parseSuggestions
+        } from './api.js';
+
+        // DOM Elements
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+        const chatContainer = document.getElementById('chatContainer');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const closeSettings = document.getElementById('closeSettings');
+        const imagesBtn = document.getElementById('imagesBtn');
+        const imageUploadModal = document.getElementById('imageUploadModal');
+        const closeImageModal = document.getElementById('closeImageModal');
+        const dropArea = document.getElementById('dropArea');
+        const imageFileInput = document.getElementById('imageFileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const confirmUpload = document.getElementById('confirmUpload');
+        const cancelUpload = document.getElementById('cancelUpload');
+        const clearHistory = document.getElementById('clearHistory');
+        const newChat = document.getElementById('newChat');
+        const responseStyleOptions = document.querySelectorAll('input[name="responseStyle"]');
+        const sendButton = document.getElementById('sendButton');
+        const activeModelDisplay = document.getElementById('activeModelDisplay'); // Added
+        const quickVoiceBtn = document.getElementById('quickVoiceBtn');
+        const quickSearchBtn = document.getElementById('quickSearchBtn');
+
+        // Global variables
+        let selectedImageData = null; // Store base64 data
+        // Add screen share modal handler
+        const screenShareBtn = document.getElementById('screenShareBtn');
+        const screenShareModal = document.getElementById('screenShareModal');
+        const closeScreenShareModal = document.getElementById('closeScreenShareModal');
+
+        // Screen share modal and UI state management
+        screenShareBtn.addEventListener('click', () => {
+            screenShareModal.classList.add('active');
+        });
+
+        closeScreenShareModal.addEventListener('click', () => {
+            screenShareModal.classList.remove('active');
+            if (window.screenShare) {
+                window.screenShare.stopScreenShare();
+            }
+        });
+
+        // Update UI elements when screen sharing starts/stops
+        window.screenShare._events.onStart = () => {
+            screenVideo.srcObject = window.screenShare.stream;
+            startScreenShareBtn.disabled = true;
+            stopScreenShareBtn.disabled = false;
+            captureScreenshotBtn.disabled = false;
+            toggleRecordingBtn.disabled = false;
+            document.querySelector('.annotation-tools').classList.add('enabled');
+        };
+
+        window.screenShare._events.onStop = () => {
+            screenVideo.srcObject = null;
+            startScreenShareBtn.disabled = false;
+            stopScreenShareBtn.disabled = true;
+            captureScreenshotBtn.disabled = true;
+            toggleRecordingBtn.disabled = true;
+            toggleRecordingBtn.textContent = 'Start Recording';
+            document.querySelector('.annotation-tools').classList.remove('enabled');
+        };
+
+        window.screenShare._events.onRecordingChange = (isRecording) => {
+            toggleRecordingBtn.textContent = isRecording ? 'Stop Recording' : 'Start Recording';
+        };
+
+        let selectedDocumentData = null; // Store document data
+        let conversationHistory = [];
+        let currentResponseStyle = 'normal';
+        let isWaitingForResponse = false; // Prevent multiple submissions
+        let isRecording = false; // Voice recording state
+        let suggestions = []; // Store smart suggestions
+
+        // API endpoint (using imported functions instead)
+
+        // --- Initialization ---
+        function initializeChat() {
+            // Load history from local storage if available
+            const savedHistory = localStorage.getItem('kynseyConversationHistory');
+            if (savedHistory) {
+                conversationHistory = JSON.parse(savedHistory);
+                renderHistory();
+            } else {
+                 // Add initial welcome message if no history
+                 addMessage('Hello! How can I help you today?', 'assistant-message', false); // Don't save initial message to history yet
+            }
+
+            // Load response style
+            const savedStyle = localStorage.getItem('kynseyResponseStyle');
+            if (savedStyle) {
+                currentResponseStyle = savedStyle;
+                document.querySelector(`input[name="responseStyle"][value="${currentResponseStyle}"]`).checked = true;
+            }
+
+             // Fetch and display active model from backend (optional, could be hardcoded if static)
+             // fetchActiveModel(); // Example function call if needed
+             activeModelDisplay.textContent = 'llama3.2:3b-instruct-fp16'; // Hardcoded for now based on requirements
+        }
+
+        function saveState() {
+             localStorage.setItem('kynseyConversationHistory', JSON.stringify(conversationHistory));
+             localStorage.setItem('kynseyResponseStyle', currentResponseStyle);
+        }
+
+        function renderHistory() {
+            chatContainer.innerHTML = ''; // Clear existing messages
+            conversationHistory.forEach(msg => {
+                addMessage(msg.content, msg.role === 'user' ? 'user-message' : 'assistant-message', false); // Render without saving again
+            });
+        }
+
+        // --- UI Updates ---
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            const scrollHeight = this.scrollHeight;
+            this.style.height = scrollHeight + 'px';
+
+            // Adjust max height if needed, e.g., based on viewport
+            const maxHeight = window.innerHeight * 0.3; // Example: max 30% of viewport height
+            if (scrollHeight > maxHeight) {
+                this.style.height = maxHeight + 'px';
+                this.style.overflowY = 'auto';
+            } else {
+                this.style.overflowY = 'hidden';
+            }
+        });
+
+        // Function to add message to UI
+        function addMessage(text, className, save = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', className);
+
+            // Basic Markdown-like handling for images (if backend sends them this way)
+            // A more robust Markdown parser (like Marked.js) would be better for full support
+            if (className === 'assistant-message' && text.includes('![')) {
+                const imgRegex = /!\[.*?\]\((.*?)\)/g;
+                let lastIndex = 0;
+                let match;
+
+                while ((match = imgRegex.exec(text)) !== null) {
+                    // Add text before the image
+                    if (match.index > lastIndex) {
+                        const textNode = document.createTextNode(text.substring(lastIndex, match.index));
+                        messageDiv.appendChild(textNode);
+                    }
+                    // Add the image
+                    const img = document.createElement('img');
+                    img.src = match[1];
+                    img.alt = 'Response image'; // Alt text could be extracted if available: match[0].match(/!\[(.*?)\]/)[1]
+                    messageDiv.appendChild(img);
+                    lastIndex = imgRegex.lastIndex;
+                }
+                // Add any remaining text after the last image
+                if (lastIndex < text.length) {
+                    const textNode = document.createTextNode(text.substring(lastIndex));
+                    messageDiv.appendChild(textNode);
+                }
+            } else {
+                 // For non-assistant messages or messages without images, just set text content
+                 // Use textContent to prevent potential XSS if text is not sanitized
+                 messageDiv.textContent = text;
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
+
+            // Save to history and local storage if required
+            if (save) {
+                const role = className === 'user-message' ? 'user' : 'assistant';
+                conversationHistory.push({ role: role, content: text });
+                saveState();
+            }
+        }
+
+        // Function to show typing indicator
+        function showTypingIndicator() {
+            removeTypingIndicator(); // Remove any previous indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.classList.add('message', 'assistant-message', 'typing-indicator');
+            typingDiv.textContent = 'Thinking...'; // Changed text
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            isWaitingForResponse = true;
+            sendButton.disabled = true; // Disable send button
+            messageInput.disabled = true; // Disable input field
+        }
+
+        // Function to remove typing indicator
+        function removeTypingIndicator() {
+            const typingIndicator = chatContainer.querySelector('.typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+             isWaitingForResponse = false;
+             sendButton.disabled = false; // Re-enable send button
+             messageInput.disabled = false; // Re-enable input field
+             messageInput.focus(); // Focus back on input
+        }
+
+        // --- Event Handlers ---
+
+        // Handle chat form submission
+        chatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (isWaitingForResponse) return; // Prevent submission while waiting
+
+            const message = messageInput.value.trim();
+
+            if (message || selectedImageData) { // Allow sending if there's text OR an image
+                let userMessageContent = message;
+                if (selectedImageData) {
+                     // Add a note about the image if text is also present
+                     if (message) {
+                         userMessageContent += "\n[Image attached]";
+                     } else {
+                         userMessageContent = "[Image attached]";
+                     }
+                }
+
+                // Add user message to UI immediately
+                addMessage(userMessageContent, 'user-message');
+
+                // Clear input and reset height
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                messageInput.dispatchEvent(new Event('input')); // Trigger resize logic
+
+                // Prepare data for API
+                const requestData = {
+                    message: message, // Send original text message
+                    history: conversationHistory.slice(-10), // Send recent history (limit length if needed)
+                    responseStyle: currentResponseStyle,
+                    image: selectedImageData // Send base64 image data
+                };
+
+                // Clear selected image data after preparing request
+                const imageToSend = selectedImageData; // Keep image data for this request
+                selectedImageData = null; // Clear for next message
+
+                try {
+                    showTypingIndicator();
+                    const response = await sendMessageToLLM(requestData, imageToSend); // Pass image data separately if needed by API structure
+                    removeTypingIndicator();
+                    addMessage(response, 'assistant-message');
+                } catch (error) {
+                    console.error('Error:', error);
+                    removeTypingIndicator();
+                    addMessage(`Sorry, there was an error: ${error.message}. Please check the backend connection and try again.`, 'assistant-message');
+                }
+            }
+        });
+
+         // Allow sending with Shift+Enter
+         messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevent newline
+                chatForm.requestSubmit(); // Trigger form submission
+            }
+        });
+
+
+        // Initialize Web Speech API and Voice Visualization
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+
+        // Voice visualization setup
+        const voiceCanvas = document.getElementById('voiceCanvas');
+        const canvasCtx = voiceCanvas.getContext('2d');
+        let audioContext;
+        let analyser;
+        let microphone;
+        let animationId;
+        let retryCount = 0;
+        const MAX_RETRIES = 3;
+
+        // Voice visualization function
+        function drawVoiceVisualization(dataArray) {
+            const bufferLength = analyser.frequencyBinCount;
+            const barWidth = (voiceCanvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+
+            canvasCtx.fillStyle = '#121212';
+            canvasCtx.fillRect(0, 0, voiceCanvas.width, voiceCanvas.height);
+
+            for (let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i] / 2;
+                canvasCtx.fillStyle = `hsl(${barHeight + 200}, 100%, 50%)`;
+                canvasCtx.fillRect(x, voiceCanvas.height - barHeight, barWidth, barHeight);
+                x += barWidth + 1;
+            }
+        }
+
+        // Start voice visualization
+        async function startVoiceVisualization() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                function animate() {
+                    animationId = requestAnimationFrame(animate);
+                    analyser.getByteFrequencyData(dataArray);
+                    drawVoiceVisualization(dataArray);
+                }
+
+                animate();
+            } catch (error) {
+                console.error('Error starting voice visualization:', error);
+                handleVoiceError(error);
+            }
+        }
+
+        // Stop voice visualization
+        function stopVoiceVisualization() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            if (microphone) {
+                microphone.disconnect();
+                microphone = null;
+            }
+            // Clear canvas
+            canvasCtx.fillStyle = '#121212';
+            canvasCtx.fillRect(0, 0, voiceCanvas.width, voiceCanvas.height);
+        }
+
+        // Error handling for voice input
+        function handleVoiceError(error) {
+            console.error('Voice input error:', error);
+            const errorMessage = error.message || 'Error accessing microphone';
+            voiceStatus.textContent = errorMessage;
+            
+            if (retryCount < MAX_RETRIES) {
+                retryCount++;
+                voiceStatus.textContent = `Retrying... (${retryCount}/${MAX_RETRIES})`;
+                setTimeout(() => {
+                    recognition.start();
+                }, 1000);
+            } else {
+                voiceStatus.textContent = 'Unable to access microphone. Please try again.';
+                stopVoiceVisualization();
+                isRecording = false;
+                startVoiceBtn.style.backgroundColor = '';
+            }
+        }
+
+        // Enhanced voice input setup
+        recognition.lang = 'en-US'; // Default language
+
+        // Smart suggestions handler
+        async function updateSuggestions(text) {
+            if (!text.trim()) {
+                document.getElementById('suggestionsContainer').style.display = 'none';
+                return;
+            }
+
+            try {
+                const defaultSuggestions = [
+                    `Tell me more about "${text}"`,
+                    `Explain "${text}" in simpler terms`,
+                    `Give me examples related to "${text}"`
+                ];
+                suggestions = parseSuggestions({ suggestions: defaultSuggestions });
+
+                if (suggestions.length > 0) {
+                    const container = document.getElementById('suggestionsContainer');
+                    container.innerHTML = suggestions
+                        .map(s => `<div class="suggestion-item" style="padding: 0.5rem; cursor: pointer; hover:background-color: #3d3d3e;">${s}</div>`)
+                        .join('');
+                    container.style.display = 'block';
+
+                    // Add click handlers
+                    container.querySelectorAll('.suggestion-item').forEach((item, index) => {
+                        item.addEventListener('click', () => {
+                            messageInput.value = suggestions[index];
+                            container.style.display = 'none';
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating suggestions:', error);
+            }
+        }
+
+        // Handlers for new features
+        messageInput.addEventListener('input', () => {
+            updateSuggestions(messageInput.value);
+        });
+
+        // Document upload handlers
+        const documentFileInput = document.getElementById('documentFileInput');
+        const documentDropArea = document.getElementById('documentDropArea');
+        const confirmDocumentUpload = document.getElementById('confirmDocumentUpload');
+
+        documentsBtn.addEventListener('click', () => {
+            document.getElementById('documentUploadModal').classList.add('active');
+        });
+
+        document.getElementById('closeDocumentModal').addEventListener('click', () => {
+            document.getElementById('documentUploadModal').classList.remove('active');
+        });
+
+        // Handle document drop and upload
+        documentDropArea.addEventListener('click', () => documentFileInput.click());
+
+        documentFileInput.addEventListener('change', (e) => handleDocumentFiles(e.target.files));
+
+        documentDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            documentDropArea.style.borderColor = '#0b84ff';
+        });
+
+        documentDropArea.addEventListener('dragleave', () => {
+            documentDropArea.style.borderColor = '#3d3d3e';
+        });
+
+        documentDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            documentDropArea.style.borderColor = '#3d3d3e';
+            handleDocumentFiles(e.dataTransfer.files);
+        });
+
+        async function handleDocumentFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'application/pdf' || 
+                    file.type === 'application/msword' || 
+                    file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                    file.type === 'text/plain') {
+                    try {
+                        confirmDocumentUpload.disabled = false;
+                        selectedDocumentData = file;
+                    } catch (error) {
+                        console.error('Error preparing document:', error);
+                        alert('Error preparing document for upload.');
+                        resetDocumentUpload();
+                    }
+                } else {
+                    alert('Please select a valid document file (PDF, DOC, DOCX, or TXT).');
+                    resetDocumentUpload();
+                }
+            }
+        }
+
+        confirmDocumentUpload.addEventListener('click', async () => {
+            if (selectedDocumentData) {
+                try {
+                    const result = await uploadDocument(selectedDocumentData);
+                    messageInput.value = `I've uploaded ${selectedDocumentData.name}. Here's what I found: ${result.summary}`;
+                    document.getElementById('documentUploadModal').classList.remove('active');
+                    chatForm.requestSubmit();
+                } catch (error) {
+                    console.error('Error uploading document:', error);
+                    messageInput.value = `I'm having trouble analyzing ${selectedDocumentData.name}. Could you try uploading it again?`;
+                    document.getElementById('documentUploadModal').classList.remove('active');
+                    chatForm.requestSubmit();
+                }
+                resetDocumentUpload();
+            }
+        });
+
+        function resetDocumentUpload() {
+            documentFileInput.value = '';
+            selectedDocumentData = null;
+            confirmDocumentUpload.disabled = true;
+        }
+
+        // Voice input handlers
+        const voiceBtn = document.getElementById('voiceBtn');
+        const startVoiceBtn = document.getElementById('startVoiceBtn');
+        const voiceStatus = document.getElementById('voiceStatus');
+
+        voiceBtn.addEventListener('click', () => {
+            document.getElementById('voiceInputModal').classList.add('active');
+        });
+
+        document.getElementById('closeVoiceModal').addEventListener('click', () => {
+            document.getElementById('voiceInputModal').classList.remove('active');
+            if (isRecording) {
+                recognition.stop();
+            }
+        });
+
+        // Voice input event handlers
+        const voiceLanguageSelect = document.getElementById('voiceLanguage');
+        voiceLanguageSelect.addEventListener('change', () => {
+            recognition.lang = voiceLanguageSelect.value;
+        });
+
+        startVoiceBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    retryCount = 0; // Reset retry count
+                    await startVoiceVisualization();
+                    recognition.start();
+                    isRecording = true;
+                    voiceStatus.textContent = 'Listening...';
+                    startVoiceBtn.style.backgroundColor = '#dc3545';
+                } catch (error) {
+                    handleVoiceError(error);
+                }
+            } else {
+                recognition.stop();
+                stopVoiceVisualization();
+                isRecording = false;
+                voiceStatus.textContent = 'Click to start recording';
+                startVoiceBtn.style.backgroundColor = '';
+            }
+        });
+
+        // Recognition event handlers
+        recognition.onstart = () => {
+            voiceStatus.textContent = 'Listening...';
+            startVoiceBtn.style.backgroundColor = '#dc3545';
+        };
+
+        recognition.onend = () => {
+            if (isRecording) {
+                recognition.start(); // Keep recording if still in recording mode
+            } else {
+                stopVoiceVisualization();
+                voiceStatus.textContent = 'Click to start recording';
+                startVoiceBtn.style.backgroundColor = '';
+            }
+        };
+
+        recognition.onerror = (event) => {
+            handleVoiceError(event.error);
+        };
+
+        recognition.onresult = async (event) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                    voiceStatus.textContent = interimTranscript; // Show interim results
+                }
+            }
+
+            if (finalTranscript) {
+                try {
+                    const result = await processVoiceInput(finalTranscript);
+                    messageInput.value = result.processed;
+                    
+                    if (result.command) {
+                        // Handle voice commands
+                        switch (result.command.toLowerCase()) {
+                            case 'new chat':
+                                newChat.click();
+                                break;
+                            case 'clear history':
+                                clearHistory.click();
+                                break;
+                            case 'upload file':
+                                documentsBtn.click();
+                                break;
+                            case 'search web':
+                                searchBtn.click();
+                                break;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error processing voice input:', error);
+                    messageInput.value = finalTranscript;
+                }
+
+                document.getElementById('voiceInputModal').classList.remove('active');
+                stopVoiceVisualization();
+                isRecording = false;
+                
+                // Auto-submit if it's a command or if there's a complete sentence
+                if (result?.command || finalTranscript.trim().endsWith('.')) {
+                    chatForm.requestSubmit();
+                }
+            }
+        };
+
+        // Email draft handlers
+        const emailBtn = document.getElementById('emailBtn');
+        emailBtn.addEventListener('click', () => {
+            document.getElementById('emailDraftModal').classList.add('active');
+        });
+
+        document.getElementById('closeEmailModal').addEventListener('click', () => {
+            document.getElementById('emailDraftModal').classList.remove('active');
+        });
+
+        document.getElementById('generateEmail').addEventListener('click', async () => {
+            const subject = document.getElementById('emailSubject').value;
+            const body = document.getElementById('emailBody').value;
+            
+            if (subject || body) {
+                try {
+                    const result = await generateEmailDraft('', subject, body);
+                    messageInput.value = result.draft;
+                    document.getElementById('emailDraftModal').classList.remove('active');
+                    chatForm.requestSubmit();
+                } catch (error) {
+                    console.error('Error generating email:', error);
+                    messageInput.value = `Draft an email${subject ? ' with subject: ' + subject : ''}${body ? ' about: ' + body : ''}`;
+                    document.getElementById('emailDraftModal').classList.remove('active');
+                    chatForm.requestSubmit();
+                }
+            }
+        });
+
+        // Web search handlers
+        const searchBtn = document.getElementById('searchBtn');
+        searchBtn.addEventListener('click', () => {
+            document.getElementById('webSearchModal').classList.add('active');
+        });
+
+        document.getElementById('closeSearchModal').addEventListener('click', () => {
+            document.getElementById('webSearchModal').classList.remove('active');
+        });
+
+        document.getElementById('executeSearch').addEventListener('click', async () => {
+            const query = document.getElementById('searchQuery').value;
+            if (query) {
+                try {
+                    const searchResults = await performSearch(query);
+                    messageInput.value = `Here's what I found for "${query}": ${searchResults.summary}`;
+                    document.getElementById('webSearchModal').classList.remove('active');
+                    chatForm.requestSubmit();
+                } catch (error) {
+                    console.error('Error performing search:', error);
+                    messageInput.value = `Search the web for: ${query}`;
+                    document.getElementById('webSearchModal').classList.remove('active');
+                    chatForm.requestSubmit();
+                }
+            }
+        });
+
+        // Settings panel handlers
+        settingsBtn.addEventListener('click', () => settingsPanel.classList.add('active'));
+        closeSettings.addEventListener('click', () => settingsPanel.classList.remove('active'));
+
+        // Quick-access buttons handlers
+        quickVoiceBtn.addEventListener('click', () => {
+            document.getElementById('voiceInputModal').classList.add('active');
+        });
+
+        quickSearchBtn.addEventListener('click', () => {
+            document.getElementById('webSearchModal').classList.add('active');
+        });
+
+        // Add hover effect for quick action buttons
+        const actionButtons = document.querySelectorAll('.action-button');
+        actionButtons.forEach(button => {
+            button.addEventListener('mouseover', function() {
+                this.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                this.style.color = '#ffffff';
+            });
+            
+            button.addEventListener('mouseout', function() {
+                this.style.backgroundColor = '';
+                this.style.color = '#9aa0a6';
+            });
+        });
+
+        // Settings panel handlers
+        imagesBtn.addEventListener('click', () => {
+            resetImageUpload(); // Reset state when opening modal
+            imageUploadModal.classList.add('active');
+        });
+        closeImageModal.addEventListener('click', () => imageUploadModal.classList.remove('active'));
+        cancelUpload.addEventListener('click', () => imageUploadModal.classList.remove('active'));
+
+        // Handle image upload via click
+        dropArea.addEventListener('click', () => imageFileInput.click());
+
+        // Handle file selection
+        imageFileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        // Handle drag and drop
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.style.borderColor = '#0b84ff';
+        });
+        dropArea.addEventListener('dragleave', () => dropArea.style.borderColor = '#3d3d3e');
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.style.borderColor = '#3d3d3e';
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // Handle the selected files
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                // Add more image types if needed
+                if (file.type.startsWith('image/jpeg') || file.type.startsWith('image/png') || file.type.startsWith('image/gif') || file.type.startsWith('image/webp')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                        // Store only the base64 part
+                        selectedImageData = e.target.result.split(',')[1];
+                        confirmUpload.disabled = false; // Enable upload button
+                    };
+                    reader.onerror = function(error) {
+                         console.error("FileReader error: ", error);
+                         alert("Error reading file.");
+                         resetImageUpload();
+                    }
+                    reader.readAsDataURL(file); // Read as Base64
+                } else {
+                     alert("Please select a valid image file (JPEG, PNG, GIF, WebP).");
+                     resetImageUpload();
+                }
+            }
+        }
+
+        // Confirm image upload (attaches image data for the *next* message)
+        confirmUpload.addEventListener('click', () => {
+            if (selectedImageData) {
+                // Don't add a message here, the image data is now stored
+                // and will be sent with the next text message submitted by the user.
+                imageUploadModal.classList.remove('active');
+                messageInput.focus(); // Focus input for user to type query about image
+                // Optionally, show a small indicator near the input field that an image is attached
+            }
+        });
+
+        // Reset image upload state
+        function resetImageUpload() {
+            imageFileInput.value = ''; // Clear file input
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            selectedImageData = null;
+            confirmUpload.disabled = true; // Disable upload button
+        }
+
+        // Clear conversation history
+        clearHistory.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the conversation history? This cannot be undone.')) {
+                conversationHistory = [];
+                chatContainer.innerHTML = ''; // Clear UI
+                addMessage('Hello! How can I help you today?', 'assistant-message', false); // Add welcome message back
+                resetImageUpload();
+                saveState(); // Save the cleared state
+            }
+        });
+
+        // Start a new chat
+        newChat.addEventListener('click', () => {
+            // Only confirm if there's actually history beyond the initial message
+            if (conversationHistory.length > 0 && confirm('Start a new conversation? Your current chat history will be cleared.')) {
+                conversationHistory = [];
+                chatContainer.innerHTML = '';
+                addMessage('Hello! How can I help you today?', 'assistant-message', false);
+                resetImageUpload();
+                saveState();
+            } else if (conversationHistory.length === 0) {
+                 // If already empty, just ensure welcome message is there
+                 chatContainer.innerHTML = '';
+                 addMessage('Hello! How can I help you today?', 'assistant-message', false);
+            }
+        });
+
+        // Response style handlers
+        responseStyleOptions.forEach(option => {
+            option.addEventListener('change', function() {
+                if (this.checked) {
+                    currentResponseStyle = this.value;
+                    console.log('Response style changed to:', currentResponseStyle);
+                    saveState(); // Save selected style
+                }
+            });
+        });
+
+        // --- API Communication ---
+        async function sendMessageToLLM(data, imageBase64 = null) {
+            try {
+                let fullResponse = '';
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', 'assistant-message');
+                chatContainer.appendChild(messageDiv);
+
+                const onChunk = (chunk) => {
+                    fullResponse += chunk;
+                    messageDiv.textContent = fullResponse;
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                };
+
+                const response = await fetchChatResponse(data.message, {
+                    history: data.history,
+                    responseStyle: data.responseStyle,
+                    image: imageBase64,
+                    onChunk
+                });
+
+                return response;
+            } catch (error) {
+                console.error('API Communication Error:', error);
+                throw error;
+            }
+        }
+
+        // --- Global Event Listeners ---
+        // Close settings panel if clicking outside
+        document.addEventListener('click', function(event) {
+            if (!settingsPanel.contains(event.target) && !settingsBtn.contains(event.target) && settingsPanel.classList.contains('active')) {
+                settingsPanel.classList.remove('active');
+            }
+        });
+
+        // Screen sharing setup
+        screenShareModal.style.display = 'none';
+        const screenshare = window.screenShare;
+        const screenVideo = document.getElementById('screenVideo');
+        const startScreenShareBtn = document.getElementById('startScreenShare');
+        const stopScreenShareBtn = document.getElementById('stopScreenShare');
+        const captureScreenshotBtn = document.getElementById('captureScreenshot');
+        const toggleRecordingBtn = document.getElementById('toggleRecording');
+        
+        // Update UI when screen sharing starts
+        screenshare._events.onStart = () => {
+            screenVideo.srcObject = screenshare.stream;
+            startScreenShareBtn.disabled = true;
+            stopScreenShareBtn.disabled = false;
+            captureScreenshotBtn.disabled = false;
+            toggleRecordingBtn.disabled = false;
+        };
+
+        // Update UI when screen sharing stops
+        screenshare._events.onStop = () => {
+            screenVideo.srcObject = null;
+            startScreenShareBtn.disabled = false;
+            stopScreenShareBtn.disabled = true;
+            captureScreenshotBtn.disabled = true;
+            toggleRecordingBtn.disabled = true;
+            toggleRecordingBtn.textContent = 'Start Recording';
+        };
+
+        // Update recording button text
+        screenshare._events.onRecordingChange = (isRecording) => {
+            toggleRecordingBtn.textContent = isRecording ? 'Stop Recording' : 'Start Recording';
+        };
+
+        // Capture screenshot
+        captureScreenshotBtn.addEventListener('click', () => {
+            if (!screenVideo.srcObject) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = screenVideo.videoWidth;
+            canvas.height = screenVideo.videoHeight;
+            
+            // Draw video frame
+            canvas.getContext('2d').drawImage(screenVideo, 0, 0);
+            
+            // Draw annotations if any
+            const annotationCanvas = document.getElementById('annotationCanvas');
+            if (annotationCanvas) {
+                canvas.getContext('2d').drawImage(annotationCanvas, 0, 0);
+            }
+
+            // Convert to base64 and send to chat
+            const screenshot = canvas.toDataURL('image/png');
+            messageInput.value = 'Here\'s a screenshot from my screen:';
+            selectedImageData = screenshot.split(',')[1];
+            chatForm.requestSubmit();
+        });
+
+        // Initialize chat on load
+        document.addEventListener('DOMContentLoaded', initializeChat);
+
+    </script>
+</body>
+</html>

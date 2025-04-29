@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYNSEY AI - Admin Panel</title>
+    <style>
+        body { font-family: sans-serif; background-color: #121212; color: #eee; padding: 20px; }
+        h1, h2 { color: #0b84ff; }
+        .container { max-width: 800px; margin: auto; background-color: #202124; padding: 20px; border-radius: 8px; }
+        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #333; border-radius: 5px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        select, input[type="text"] { width: 100%; padding: 8px; margin-bottom: 10px; background-color: #333; color: #eee; border: 1px solid #555; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 10px 15px; background-color: #0b84ff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+        button:hover { background-color: #0056b3; }
+        .status { margin-top: 10px; font-style: italic; min-height: 1em; /* Prevent layout shift */ }
+        .error { color: #ff4d4d; }
+        .success { color: #4caf50; }
+        a { color: #0b84ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KYNSEY AI - Admin Panel</h1>
+        <p>Configure the AI's behavior and settings.</p>
+
+        <!-- Model Selection -->
+        <div class="section">
+            <h2>Model Selection</h2>
+            <label for="model-select">Active Model:</label>
+            <select id="model-select" name="model"></select>
+            <button id="save-model-btn">Set Active Model</button>
+            <div id="model-status" class="status"></div>
+        </div>
+
+        <!-- Style Selection -->
+        <div class="section">
+            <h2>Response Style</h2>
+            <label for="style-select">Active Style:</label>
+            <select id="style-select" name="style"></select>
+            <button id="save-style-btn">Set Active Style</button>
+            <div id="style-status" class="status"></div>
+        </div>
+
+        <!-- File Base Selection (Placeholder) -->
+        <div class="section">
+            <h2>File Base (Context)</h2>
+            <p><i>(Functionality to load/use file bases in chat is not yet implemented in backend)</i></p>
+            <label for="filebase-select">Active File Base:</label>
+            <select id="filebase-select" name="filebase"></select>
+            <button id="save-filebase-btn">Set Active File Base</button>
+            <div id="filebase-status" class="status"></div>
+        </div>
+
+        <p><a href="/">Back to Chat</a></p>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3002/api'; // Backend runs on port 3002
+        const ADMIN_SECRET = localStorage.getItem('adminSecret') || ''; // Get stored admin secret
+
+        // --- DOM Elements ---
+        const modelSelect = document.getElementById('model-select');
+        const styleSelect = document.getElementById('style-select');
+        const filebaseSelect = document.getElementById('filebase-select');
+        const saveModelBtn = document.getElementById('save-model-btn');
+        let currentProfiles = []; // Store profiles data
+        const saveStyleBtn = document.getElementById('save-style-btn');
+        const saveFilebaseBtn = document.getElementById('save-filebase-btn');
+        const modelStatus = document.getElementById('model-status');
+        const styleStatus = document.getElementById('style-status');
+        const filebaseStatus = document.getElementById('filebase-status');
+
+        // --- Helper Functions ---
+        async function fetchData(endpoint) {
+            try {
+                const headers = {};
+                if (ADMIN_SECRET && endpoint === '/models') {
+                    headers['x-admin-secret'] = ADMIN_SECRET;
+                }
+                const response = await fetch(`${API_BASE}${endpoint}`, { headers });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+                    throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                return { error: error.message }; // Return error object
+            }
+        }
+
+        async function postData(endpoint, data) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (ADMIN_SECRET && (endpoint === '/models/active')) {
+                    headers['x-admin-secret'] = ADMIN_SECRET;
+                }
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(data)
+                });
+                const responseData = await response.json();
+                return { ok: response.ok, data: responseData };
+            } catch (error) {
+                console.error(`Error posting to ${endpoint}:`, error);
+                return { ok: false, data: { error: error.message } };
+            }
+        }
+
+        function populateSelect(selectElement, options, activeValue, valueKey = null, textKey = null) {
+            selectElement.innerHTML = ''; // Clear existing options
+            if (!options || options.length === 0) {
+                selectElement.innerHTML = '<option value="">No options available</option>';
+                selectElement.disabled = true;
+                return;
+            }
+             selectElement.disabled = false;
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                // Allow specifying object keys for value/text, otherwise assume array of strings
+                const value = valueKey ? option[valueKey] : option;
+                const text = textKey ? option[textKey] : option;
+                optionElement.value = value;
+                optionElement.textContent = text;
+                if (value === activeValue) {
+                    optionElement.selected = true;
+                }
+                selectElement.appendChild(optionElement);
+            });
+        }
+
+        function showStatus(element, message, isError = false) {
+            element.textContent = message;
+            element.className = `status ${isError ? 'error' : 'success'}`;
+            // Don't auto-clear error messages
+            if (!isError) {
+                setTimeout(() => {
+                    if (element.textContent === message) { // Avoid clearing subsequent messages
+                       element.textContent = '';
+                       element.className = 'status';
+                    }
+                }, 5000); // Clear success after 5s
+            }
+        }
+
+        // --- Load Initial Data ---
+        async function loadAdminData() {
+            modelStatus.textContent = 'Loading models...';
+            styleStatus.textContent = 'Loading styles...';
+            filebaseStatus.textContent = 'Loading file bases...';
+
+            // Load Model Profiles
+            const modelData = await fetchData('/models');
+            if (modelData && !modelData.error) {
+                currentProfiles = modelData.profiles || [];
+                // Just use the profiles directly - they already have name and description properties
+                populateSelect(modelSelect, currentProfiles, modelData.activeProfile?.name, 'name', 'name');
+                showStatus(modelStatus, 
+                    `${modelData.activeProfile?.isModelAvailable ? '✓' : '⚠'} ` +
+                    `Active: ${modelData.activeProfile?.name}`, 
+                    !modelData.activeProfile?.isModelAvailable
+                );
+            } else {
+                populateSelect(modelSelect, [], null);
+                showStatus(modelStatus, `Error loading profiles: ${modelData?.error || 'Unknown error'}`, true);
+            }
+
+            // Load Styles
+            const styleData = await fetchData('/styles');
+             if (styleData && !styleData.error) {
+                populateSelect(styleSelect, styleData.availableStyles, styleData.activeStyle);
+                 showStatus(styleStatus, `Loaded ${styleData.availableStyles?.length || 0} styles.`, false);
+            } else {
+                 populateSelect(styleSelect, [], null);
+                 showStatus(styleStatus, `Error loading styles: ${styleData?.error || 'Unknown error'}`, true);
+            }
+
+            // Load File Bases
+            const filebaseData = await fetchData('/filebases');
+             if (filebaseData && !filebaseData.error) {
+                populateSelect(filebaseSelect, filebaseData.availableFileBases, filebaseData.activeFileBase);
+                 showStatus(filebaseStatus, `Loaded ${filebaseData.availableFileBases?.length || 0} file bases.`, false);
+            } else {
+                 populateSelect(filebaseSelect, [], null);
+                 showStatus(filebaseStatus, `Error loading file bases: ${filebaseData?.error || 'Unknown error'}`, true);
+            }
+        }
+
+        // --- Event Listeners ---
+        saveModelBtn.addEventListener('click', async () => {
+            if (!ADMIN_SECRET) {
+                const secret = prompt('Please enter the admin secret to change models:');
+                if (!secret) return;
+                localStorage.setItem('adminSecret', secret);
+                window.location.reload(); // Reload to use new secret
+                return;
+            }
+
+            const selectedProfile = modelSelect.value;
+            if (!selectedProfile) {
+                showStatus(modelStatus, 'Please select a profile.', true);
+                return;
+            }
+
+            modelStatus.textContent = 'Saving...';
+            modelStatus.className = 'status';
+            const result = await postData('/models/active', { profileName: selectedProfile });
+            
+            if (result.ok) {
+                showStatus(modelStatus, result.data.message || 'Profile set successfully.');
+                // Update displayed model info without full reload
+                const profile = currentProfiles.find(p => p.name === selectedProfile);
+                if (profile) {
+                    modelSelect.title = profile.description;
+                }
+            } else {
+                if (result.data.error?.includes('Forbidden')) {
+                    localStorage.removeItem('adminSecret'); // Clear invalid secret
+                    showStatus(modelStatus, 'Invalid admin secret. Please try again.', true);
+                } else {
+                    showStatus(modelStatus, `Error: ${result.data.error || 'Failed to set profile.'}`, true);
+                }
+            }
+        });
+
+        saveStyleBtn.addEventListener('click', async () => {
+            const selectedStyle = styleSelect.value;
+             if (!selectedStyle) {
+                 showStatus(styleStatus, 'Please select a style.', true);
+                 return;
+             };
+            styleStatus.textContent = 'Saving...';
+            styleStatus.className = 'status';
+            const result = await postData('/styles/active', { styleName: selectedStyle });
+             if (result.ok) {
+                showStatus(styleStatus, result.data.message || 'Style set successfully.');
+            } else {
+                showStatus(styleStatus, `Error: ${result.data.error || 'Failed to set style.'}`, true);
+            }
+        });
+
+        saveFilebaseBtn.addEventListener('click', async () => {
+            const selectedFileBase = filebaseSelect.value;
+             if (!selectedFileBase) {
+                 showStatus(filebaseStatus, 'Please select a file base.', true);
+                 return;
+             };
+            filebaseStatus.textContent = 'Saving...';
+            filebaseStatus.className = 'status';
+            const result = await postData('/filebases/active', { fileBaseName: selectedFileBase });
+             if (result.ok) {
+                showStatus(filebaseStatus, result.data.message || 'File base set successfully.');
+            } else {
+                showStatus(filebaseStatus, `Error: ${result.data.error || 'Failed to set file base.'}`, true);
+            }
+        });
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', loadAdminData);
+
+    </script>
+</body>
+</html>
