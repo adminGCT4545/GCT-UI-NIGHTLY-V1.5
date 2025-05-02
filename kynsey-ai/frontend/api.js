@@ -5,6 +5,7 @@ const API_BASE = 'http://localhost:3002'; // Base URL for all API endpoints (mat
 const ENDPOINTS = {
   CHAT: `${API_BASE}/api/chat`,
   MODELS: `${API_BASE}/api/models`,
+  MODEL_TIERS: `${API_BASE}/api/models/tiers`,
   STYLES: `${API_BASE}/api/styles`,
   SEARCH: `${API_BASE}/api/search`,
   EMAIL: `${API_BASE}/api/email/draft`,
@@ -49,15 +50,75 @@ export async function getModelProfiles() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return await response.json();
+        const data = await response.json();
+        return {
+            ...data,
+            profiles: data.profiles.map(p => ({
+                ...p,
+                displayName: p.displayName || p.name, // Backward compatibility
+                description: p.description || ''
+            }))
+        };
     } catch (error) {
         console.error('Error fetching model profiles:', error);
         throw error;
     }
 }
 
+/**
+ * Get available model tiers and profiles for each tier
+ * @returns {Promise<Object>} Object containing tiers, active tier, and profiles per tier
+ */
+export async function getModelTiers() {
+    try {
+        const response = await fetch(ENDPOINTS.MODEL_TIERS);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching model tiers:', error);
+        throw error;
+    }
+}
+
+/**
+ * Set the active model tier
+ * @param {string} tier - The tier to set as active
+ * @param {string} adminSecret - Admin secret for authorization
+ * @returns {Promise<Object>} Response containing the new active profile
+ */
+export async function setActiveTier(tier, adminSecret) {
+    try {
+        const response = await fetch(`${ENDPOINTS.MODEL_TIERS}/active`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-admin-secret': adminSecret
+            },
+            body: JSON.stringify({ tier })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to set active tier');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error setting active tier:', error);
+        throw error;
+    }
+}
+
 // Set active model profile (admin only)
-export async function setActiveProfile(profileName, adminSecret) {
+/**
+ * Set the active profile by display name
+ * @param {string} displayName - The display name of the profile to set as active
+ * @param {string} adminSecret - Admin secret for authorization
+ * @returns {Promise<Object>} Response containing the new active profile
+ */
+export async function setActiveProfile(displayName, adminSecret) {
     try {
         const response = await fetch(`${ENDPOINTS.MODELS}/active`, {
             method: 'POST',
@@ -65,7 +126,7 @@ export async function setActiveProfile(profileName, adminSecret) {
                 'Content-Type': 'application/json',
                 'x-admin-secret': adminSecret
             },
-            body: JSON.stringify({ profileName })
+            body: JSON.stringify({ profileName: displayName })
         });
         
         if (!response.ok) {
@@ -283,7 +344,9 @@ export function isSpecialCommandResponse(response) {
 export default {
     fetchChatResponse,
     getModelProfiles,
+    getModelTiers,
     setActiveProfile,
+    setActiveTier,
     getResponseStyles,
     setResponseStyle,
     performSearch,

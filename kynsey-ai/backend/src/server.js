@@ -10,7 +10,18 @@ import fs from 'fs/promises';
 
 // Import core configuration
 import { getSystemPrompt, getAvailableStyles, generateSuggestions } from './config/systemPrompt.js';
-import { modelProfiles, getProfileByName, getModelIdByName, getDefaultProfile } from './config/profiles.js';
+import {
+    modelProfiles,
+    getProfileByDisplayName,
+    getProfileByName,
+    getModelIdByDisplayName,
+    getModelIdByName,
+    getDefaultProfile,
+    MODEL_TIERS,
+    getAvailableTiers,
+    isValidTier,
+    getProfilesByTier
+} from './config/profiles.js';
 import { loadAppState, updateActiveProfile } from './config/appState.js';
 
 // Import middleware
@@ -58,8 +69,9 @@ const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
 console.log(`Connecting to Ollama at: ${ollamaHost}`);
 
 // --- Configuration State ---
-let activeProfileName = getDefaultProfile().name;
+let activeProfileName = getDefaultProfile().displayName;
 let activeModel = getDefaultProfile().modelId;
+let activeTier = getDefaultProfile().tier;
 let activeStyle = 'normal';
 let activeFileBase = null;
 let availableFileBases = ['None'];
@@ -206,67 +218,98 @@ app.post('/api/chat', validateChatRequest, async (req, res) => {
 // Get available profiles and active profile
 app.get('/api/models', async (req, res) => {
     try {
+        // Get available models from Ollama
+        let ollamaModels = [];
+        try {
+            const response = await ollama.list();
+            if (!response || !Array.isArray(response)) {
+                throw new Error('Invalid response from Ollama');
+            }
+            ollamaModels = response.map(m => m.name);
+        } catch (error) {
+            console.error('Error fetching models from Ollama:', error);
+            return res.status(500).json({
+                error: `Error fetching models: ${error.message}`,
+                availableModels: [],
+                activeModel: activeModel
+            });
+        }
+
+        // Map profiles to response format
         const profiles = modelProfiles.map(p => ({
-            name: p.name,
+            name: p.displayName, // Add name for backwards compatibility
+            displayName: p.displayName,
+            internalName: p.internalName,
             description: p.description,
-            isActive: p.name === activeProfileName
+            tier: p.tier,
+            isActive: p.displayName === activeProfileName
         }));
 
-        // Check if active model is available in Ollama
-        const modelAvailable = await ollama.show({ name: activeModel })
-            .then(() => true)
-            .catch(() => false);
+        // Get available tiers
+        const tiers = getAvailableTiers();
 
         res.json({
             profiles,
+            tiers,
+            availableModels: ollamaModels,
+            activeModel: activeModel,
             activeProfile: {
-                name: activeProfileName,
+                name: activeProfileName, // Add name for backwards compatibility
+                displayName: activeProfileName,
                 modelId: activeModel,
-                isModelAvailable: modelAvailable
+                tier: activeTier,
+                isModelAvailable: ollamaModels.includes(activeModel)
             }
         });
     } catch (error) {
         console.error(`Error in GET /api/models:`, error);
         res.status(500).json({
             error: `Failed to fetch model profiles: ${error.message}`,
-            profiles: [],
-            activeProfile: {
-                name: activeProfileName,
-                modelId: activeModel,
-                isModelAvailable: false
-            }
+            availableModels: [],
+            activeModel: activeModel
         });
     }
 });
 
 // Set active profile
 app.post('/api/models/active', requireAdmin, async (req, res) => {
-    const { profileName } = req.body;
+    const { profileName, modelName } = req.body;
 
-    if (!profileName) {
+    if (!profileName && !modelName) {
         return res.status(400).json({ error: 'profileName is required' });
     }
 
-    const profile = getProfileByName(profileName);
+    const name = profileName || modelName;
+    // Get profile by display name first, then try internal name as fallback
+    const profile = getProfileByDisplayName(name) || getProfileByName(name);
+
     if (!profile) {
-        return res.status(400).json({ error: `Invalid profile name: ${profileName}` });
+        return res.status(400).json({ error: `Invalid profile name: ${name}` });
     }
 
     try {
         // Verify model exists in Ollama
-        await ollama.show({ name: profile.modelId });
+        const modelList = await ollama.list();
+        const modelExists = modelList.some(m => m.name === profile.modelId);
+        if (!modelExists) {
+            throw new Error(`Model ${profile.modelId} not found`);
+        }
 
         // Update active profile
-        await updateActiveProfile(profileName);
-        activeProfileName = profileName;
+        await updateActiveProfile(profile.displayName);
+        activeProfileName = profile.displayName;
         activeModel = profile.modelId;
+        activeTier = profile.tier;
         app.set('activeModel', activeModel); // Update app-wide setting
 
         res.json({
             message: `Active profile set to ${activeProfileName}`,
+            activeModel: activeModel,
             profile: {
                 name: activeProfileName,
-                modelId: activeModel
+                displayName: activeProfileName,
+                modelId: activeModel,
+                tier: activeTier
             }
         });
     } catch (error) {
@@ -361,6 +404,86 @@ app.get('/api/status', async (req, res) => {
         res.status(500).json({
             status: 'error',
             error: error.message
+        });
+    }
+});
+
+// --- Model Tier API Endpoints ---
+
+// Get available tiers and active tier
+app.get('/api/models/tiers', async (req, res) => {
+    try {
+        const tiers = getAvailableTiers();
+        const tierProfiles = {};
+
+        // Get profiles for each tier
+        for (const tier of tiers) {
+            tierProfiles[tier] = getProfilesByTier(tier).map(p => ({
+                displayName: p.displayName,
+                description: p.description
+            }));
+        }
+
+        res.json({
+            tiers,
+            activeTier,
+            tierProfiles
+        });
+    } catch (error) {
+        console.error('Error in GET /api/models/tiers:', error);
+        res.status(500).json({
+            error: `Failed to fetch model tiers: ${error.message}`
+        });
+    }
+});
+
+// Set active tier
+app.post('/api/models/tier', requireAdmin, async (req, res) => {
+    const { tier } = req.body;
+
+    if (!tier) {
+        return res.status(400).json({ error: 'tier is required' });
+    }
+
+    if (!isValidTier(tier)) {
+        return res.status(400).json({ error: `Invalid tier: ${tier}` });
+    }
+
+    try {
+        // Get the default profile for the selected tier
+        const tierProfiles = getProfilesByTier(tier);
+        if (tierProfiles.length === 0) {
+            return res.status(400).json({ error: `No profiles available for tier: ${tier}` });
+        }
+
+        const defaultTierProfile = tierProfiles[0];
+
+        // Verify model exists in Ollama
+        await ollama.show({ name: defaultTierProfile.modelId });
+
+        // Update active profile
+        await updateActiveProfile(defaultTierProfile.displayName);
+        activeProfileName = defaultTierProfile.displayName;
+        activeModel = defaultTierProfile.modelId;
+        activeTier = tier;
+        app.set('activeModel', activeModel);
+
+        res.json({
+            message: `Active tier set to ${tier}`,
+            profile: {
+                displayName: activeProfileName,
+                modelId: activeModel,
+                tier: activeTier
+            }
+        });
+    } catch (error) {
+        if (error.message.includes('not found')) {
+            return res.status(404).json({
+                error: `Model for tier ${tier} not found in Ollama. Please ensure it is installed.`
+            });
+        }
+        res.status(500).json({
+            error: `Failed to set active tier: ${error.message}`
         });
     }
 });

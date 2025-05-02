@@ -151,15 +151,16 @@
         .settings-panel {
             position: fixed;
             top: 0;
-            right: -300px;
-            width: 300px;
+            right: -350px;
+            width: 350px;
             height: 100vh;
             background-color: #202124;
             box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
             transition: right 0.3s ease;
             z-index: 1000;
             padding: 1.5rem;
-            color: #ffffff; /* Ensure text is visible */
+            color: #ffffff;
+            overflow-y: auto;
         }
 
         .settings-panel.active {
@@ -188,13 +189,78 @@
 
         .settings-section {
             margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #2d2e31;
+            border-radius: 0.5rem;
         }
 
         .settings-section-title {
             font-size: 0.9rem;
             color: #9aa0a6;
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .tier-selector {
+            margin-bottom: 1rem;
+        }
+
+        .tier-selector select {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #3d3d3e;
+            color: white;
+            border: 1px solid #5f6368;
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .tier-selector select:hover {
+            border-color: #0b84ff;
+        }
+
+        .tier-selector select:focus {
+            outline: none;
+            border-color: #0b84ff;
+            box-shadow: 0 0 0 2px rgba(11, 132, 255, 0.3);
+        }
+
+        .tier-info {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #9aa0a6;
+        }
+
+        .active-model-info {
+            padding: 0.75rem;
+            background-color: #3d3d3e;
+            border-radius: 0.25rem;
+            margin-top: 1rem;
+        }
+
+        .active-model-info h4 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #ffffff;
             margin-bottom: 0.5rem;
-            text-transform: uppercase; /* Style consistency */
+        }
+
+        .model-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+        }
+
+        .model-status.available {
+            background-color: #4caf50;
+        }
+
+        .model-status.unavailable {
+            background-color: #f44336;
         }
 
         .settings-option {
@@ -241,10 +307,32 @@
 
 
         #activeModelDisplay {
-            padding: 0.5rem;
-            background-color: #3d3d3e;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #e8e8e8;
+        }
+
+        .upgrade-prompt {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background-color: #1a237e;
             border-radius: 0.25rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            color: #ffffff;
+            display: none;
+        }
+
+        .upgrade-prompt.visible {
+            display: block;
+        }
+
+        .upgrade-prompt a {
+            color: #90caf9;
+            text-decoration: none;
+        }
+
+        .upgrade-prompt a:hover {
+            text-decoration: underline;
         }
 
         /* Image Upload Modal */
@@ -664,9 +752,26 @@
             </div>
         </div>
         <div class="settings-section">
-            <h3 class="settings-section-title">ACTIVE MODEL</h3>
-            <!-- Model display can be updated dynamically if needed -->
-            <div id="activeModelDisplay">llama3.2:3b-instruct-fp16</div>
+            <h3 class="settings-section-title">MODEL SETTINGS</h3>
+            <div class="tier-selector">
+                <select id="modelTierSelect">
+                    <option value="standard">Standard</option>
+                    <option value="pro">Pro</option>
+                    <option value="code">Code</option>
+                </select>
+            </div>
+            <div class="tier-info" id="tierInfo">
+                Loading tier information...
+            </div>
+            <div class="active-model-info" id="activeModelInfo">
+                <h4>Active Model</h4>
+                Loading...
+                <span class="model-status"></span>
+            </div>
+            <div class="upgrade-prompt" id="upgradePrompt">
+                Upgrade to Pro or Code tier for enhanced capabilities.
+                <a href="#" onclick="showUpgradeOptions()">Learn more</a>
+            </div>
         </div>
         <div class="settings-section">
             <h3 class="settings-section-title">CONVERSATION HISTORY</h3>
@@ -843,7 +948,10 @@
             generateEmailDraft,
             uploadDocument,
             processVoiceInput,
-            parseSuggestions
+            parseSuggestions,
+            getModelTiers,
+            setActiveTier,
+            getModelProfiles
         } from './api.js';
 
         // DOM Elements
@@ -865,9 +973,87 @@
         const newChat = document.getElementById('newChat');
         const responseStyleOptions = document.querySelectorAll('input[name="responseStyle"]');
         const sendButton = document.getElementById('sendButton');
-        const activeModelDisplay = document.getElementById('activeModelDisplay'); // Added
+        const modelTierSelect = document.getElementById('modelTierSelect');
+        const tierInfo = document.getElementById('tierInfo');
+        const activeModelInfo = document.getElementById('activeModelInfo');
+        const upgradePrompt = document.getElementById('upgradePrompt');
         const quickVoiceBtn = document.getElementById('quickVoiceBtn');
         const quickSearchBtn = document.getElementById('quickSearchBtn');
+
+        // Model tier management
+        let currentTier = 'standard';
+        let availableTiers = [];
+        let tierProfiles = {};
+
+        // Initialize model tiers
+        async function initializeModelTiers() {
+            try {
+                const { tiers, activeTier, tierProfiles: profiles } = await getModelTiers();
+                availableTiers = tiers;
+                tierProfiles = profiles;
+                currentTier = activeTier;
+                
+                // Update tier selector
+                modelTierSelect.innerHTML = tiers.map(tier =>
+                    `<option value="${tier}" ${tier === activeTier ? 'selected' : ''}>
+                        ${tier.charAt(0).toUpperCase() + tier.slice(1)}
+                    </option>`
+                ).join('');
+
+                updateTierInfo(activeTier);
+            } catch (error) {
+                console.error('Error initializing model tiers:', error);
+                tierInfo.textContent = 'Error loading tier information';
+            }
+        }
+
+        // Update tier information display
+        function updateTierInfo(tier) {
+            const profiles = tierProfiles[tier] || [];
+            const profileInfo = profiles.length > 0 ? profiles[0] : null;
+
+            if (profileInfo) {
+                tierInfo.textContent = profileInfo.description;
+                activeModelInfo.innerHTML = `
+                    <h4>Active Model</h4>
+                    ${profileInfo.displayName}
+                    <span class="model-status available"></span>
+                `;
+            } else {
+                tierInfo.textContent = 'No model available for this tier';
+                activeModelInfo.innerHTML = `
+                    <h4>Active Model</h4>
+                    Unavailable
+                    <span class="model-status unavailable"></span>
+                `;
+            }
+
+            // Show upgrade prompt for standard tier
+            if (tier === 'standard') {
+                upgradePrompt.classList.add('visible');
+            } else {
+                upgradePrompt.classList.remove('visible');
+            }
+        }
+
+        // Handle tier selection
+        async function handleTierChange(event) {
+            const newTier = event.target.value;
+            const adminSecret = localStorage.getItem('adminSecret');
+
+            try {
+                await setActiveTier(newTier, adminSecret);
+                currentTier = newTier;
+                updateTierInfo(newTier);
+            } catch (error) {
+                console.error('Error changing tier:', error);
+                event.target.value = currentTier; // Revert selection on error
+                alert('Error changing model tier. Please try again or contact support.');
+            }
+        }
+
+        // Add event listener for tier selection
+        modelTierSelect.addEventListener('change', handleTierChange);
 
         // Global variables
         let selectedImageData = null; // Store base64 data
@@ -922,7 +1108,9 @@
         // API endpoint (using imported functions instead)
 
         // --- Initialization ---
-        function initializeChat() {
+        async function initializeChat() {
+            // Initialize model tiers
+            await initializeModelTiers();
             // Load history from local storage if available
             const savedHistory = localStorage.getItem('kynseyConversationHistory');
             if (savedHistory) {

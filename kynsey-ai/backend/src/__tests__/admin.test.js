@@ -4,10 +4,17 @@ import request from 'supertest';
 import { getAvailableStyles } from '../config/systemPrompt.js'; // Keep this if needed globally
 
 // Mock ollama FIRST, ensuring it provides a default export
+// Mock return values
+const MOCK_MODELS = [
+    { name: 'llama3.2:3b-instruct-fp16', model: 'llama3.2:3b-instruct-fp16', modified_at: '...', size: 123 },
+    { name: 'gemma3:27b-it-q4_K_M', model: 'gemma3:27b-it-q4_K_M', modified_at: '...', size: 456 },
+];
+
 jest.unstable_mockModule('ollama', () => ({
-    default: { // Add the default export wrapper
-        list: jest.fn(),
+    default: {
+        list: jest.fn().mockResolvedValue(MOCK_MODELS),
         chat: jest.fn(),
+        show: jest.fn().mockResolvedValue({ name: 'gemma3:27b-it-q4_K_M' })
     }
 }));
 
@@ -17,34 +24,44 @@ let ollama;
 
 describe('Admin Panel API Endpoints', () => {
 
-    beforeAll(async () => {
-        // Dynamically import app (which imports original ollama, but should get mocked version)
-        const serverModule = await import('../server.js');
-        app = serverModule.default;
-        // Dynamically import the mocked ollama module
-        const ollamaModule = await import('ollama');
-        ollama = ollamaModule.default; // Assign the mocked module to our variable
-    });
+beforeEach(async () => {
+    // Set up test environment variables
+    process.env.ADMIN_SECRET = 'test-admin-secret';
+    // Dynamically import app (which imports original ollama, but should get mocked version)
+    const serverModule = await import('../server.js');
+    app = serverModule.default;
+    // Dynamically import the mocked ollama module
+    const ollamaModule = await import('ollama');
+    ollama = ollamaModule.default; // Assign the mocked module to our variable
+});
 
-    // Reset mocks before each test
+afterAll(() => {
+    // Clean up test environment variables
+    delete process.env.ADMIN_SECRET;
+});
+
     beforeEach(() => {
-        // Ensure ollama and its methods are available before trying to reset
         if (ollama && ollama.list && typeof ollama.list.mockReset === 'function') {
-             ollama.list.mockReset();
-             // Provide a default mock response for list()
-             ollama.list.mockResolvedValue({
-                 models: [
-                     { name: 'llama3:latest', model: 'llama3:latest', modified_at: '...', size: 123 },
-                     { name: 'mistral:latest', model: 'mistral:latest', modified_at: '...', size: 456 },
-                 ]
-             });
+            ollama.list.mockReset();
+            ollama.list.mockResolvedValue([
+                { name: 'llama3.2:3b-instruct-fp16', model: 'llama3.2:3b-instruct-fp16', modified_at: '...', size: 123 },
+                { name: 'gemma3:27b-it-q4_K_M', model: 'gemma3:27b-it-q4_K_M', modified_at: '...', size: 456 },
+                { name: 'cogito:32b-v1-preview-qwen-q4_K_M', model: 'cogito:32b-v1-preview-qwen-q4_K_M', modified_at: '...', size: 789 }
+            ]);
         } else {
             console.error('Ollama mock or ollama.list.mockReset not available in beforeEach');
         }
-        if (ollama && ollama.chat && typeof ollama.chat.mockClear === 'function') {
-             ollama.chat.mockClear();
+        if (ollama && ollama.show && typeof ollama.show.mockReset === 'function') {
+            ollama.show.mockReset();
+            ollama.show.mockResolvedValue({ name: 'gemma3:27b-it-q4_K_M' });
         } else {
-             console.error('Ollama mock or ollama.chat.mockClear not available in beforeEach');
+            console.error('Ollama mock or ollama.show.mockReset not available in beforeEach');
+        }
+
+        if (ollama && ollama.chat && typeof ollama.chat.mockReset === 'function') {
+            ollama.chat.mockReset();
+        } else {
+            console.error('Ollama mock or ollama.chat.mockReset not available in beforeEach');
         }
     });
 
@@ -60,12 +77,13 @@ describe('Admin Panel API Endpoints', () => {
             expect(response.body).toHaveProperty('availableModels');
             expect(response.body).toHaveProperty('activeModel');
             expect(ollama.list).toHaveBeenCalledTimes(1); // Ensure ollama.list was called
-            expect(response.body.availableModels).toEqual(expect.arrayContaining([
-                expect.objectContaining({ name: 'llama3:latest' }),
-                expect.objectContaining({ name: 'mistral:latest' }),
-            ]));
+            expect(response.body.availableModels).toEqual([
+                'llama3.2:3b-instruct-fp16',
+                'gemma3:27b-it-q4_K_M',
+                'cogito:32b-v1-preview-qwen-q4_K_M'
+            ]);
             // Check if the default active model (from server.js) is returned
-            expect(response.body.activeModel).toBe(process.env.DEFAULT_MODEL || 'llama3'); // Adjust if default changes
+            expect(response.body.activeModel).toBe(process.env.DEFAULT_MODEL || 'llama3.2:3b-instruct-fp16');
         });
 
         it('should handle errors when fetching models from ollama', async () => {
@@ -80,11 +98,12 @@ describe('Admin Panel API Endpoints', () => {
             expect(response.statusCode).toBe(500);
             expect(response.body).toHaveProperty('error');
             expect(response.body.error).toContain(errorMessage);
-            // Should still return the current active model as a fallback
-            expect(response.body).toHaveProperty('activeModel');
-            expect(response.body.availableModels).toEqual(expect.arrayContaining([
-                 expect.objectContaining({ name: process.env.DEFAULT_MODEL || 'llama3' })
-            ]));
+            expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toContain(errorMessage);
+            expect(response.body.availableModels).toEqual([]);
+            expect(response.body.activeModel).toBe(
+                process.env.DEFAULT_MODEL || 'llama3.2:3b-instruct-fp16'
+            );
         });
     });
 
@@ -92,32 +111,34 @@ describe('Admin Panel API Endpoints', () => {
         it('should set the active model', async () => {
             // Ensure app is loaded
             if (!app) throw new Error("Test setup failed: app not loaded");
-            const newModel = 'mistral:latest';
+            const newProfile = 'Pro'; // Use a valid profile name from profiles.js
             const response = await request(app)
                 .post('/api/models/active')
-                .send({ modelName: newModel });
+                .set('x-admin-secret', process.env.ADMIN_SECRET)
+                .send({ profileName: newProfile });
 
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty('message');
-            expect(response.body.message).toContain(`Active model set to ${newModel}`);
+            expect(response.body.message).toContain(`Active profile set to ${newProfile}`);
 
             // Verify the active model was updated by calling GET /api/models again
             // Ensure app is loaded
             if (!app) throw new Error("Test setup failed: app not loaded");
             const getResponse = await request(app).get('/api/models');
-            expect(getResponse.body.activeModel).toBe(newModel);
+            expect(getResponse.body.activeModel).toBe('gemma3:27b-it-q4_K_M'); // Pro profile's model ID
         });
 
-        it('should return 400 if modelName is missing', async () => {
+        it('should return 400 if profileName is missing', async () => {
             // Ensure app is loaded
             if (!app) throw new Error("Test setup failed: app not loaded");
             const response = await request(app)
                 .post('/api/models/active')
+                .set('x-admin-secret', process.env.ADMIN_SECRET)
                 .send({}); // Missing modelName
 
             expect(response.statusCode).toBe(400);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error).toBe('modelName is required');
+            expect(response.body.error).toBe('profileName is required');
         });
     });
 

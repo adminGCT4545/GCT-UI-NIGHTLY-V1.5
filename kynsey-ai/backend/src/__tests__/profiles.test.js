@@ -1,25 +1,58 @@
+import { jest, describe, it, expect, beforeEach, afterAll } from '@jest/globals';
 import request from 'supertest';
-import app from '../server.js';
 import { modelProfiles, getDefaultProfile } from '../config/profiles.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Mock return values
+const MOCK_MODELS = [
+    { name: 'llama3.2:3b-instruct-fp16', model: 'llama3.2:3b-instruct-fp16' },
+    { name: 'gemma3:27b-it-q4_K_M', model: 'gemma3:27b-it-q4_K_M' },
+    { name: 'cogito:32b-v1-preview-qwen-q4_K_M', model: 'cogito:32b-v1-preview-qwen-q4_K_M' }
+];
+
+// Mock Ollama
+jest.unstable_mockModule('ollama', () => ({
+    default: {
+        list: jest.fn().mockResolvedValue(MOCK_MODELS),
+        show: jest.fn().mockResolvedValue({ name: 'gemma3:27b-it-q4_K_M' })
+    }
+}));
+
+// Variables for dynamic imports
+let app;
+let ollama;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const stateFilePath = path.join(__dirname, '..', 'config', 'app_state.json');
 
 describe('Model Profile System', () => {
     const ADMIN_SECRET = 'test_admin_secret';
     
-    // Setup test environment
-    beforeAll(async () => {
+    beforeEach(async () => {
+        // Set up environment and load app
         process.env.ADMIN_SECRET = ADMIN_SECRET;
-        // Clean up any existing state file
+        const serverModule = await import('../server.js');
+        app = serverModule.default;
+        const ollamaModule = await import('ollama');
+        ollama = ollamaModule.default;
         try {
             await fs.unlink(stateFilePath);
         } catch (error) {
             if (error.code !== 'ENOENT') {
                 console.error('Error cleaning up state file:', error);
+            }
+        }
+        
+        // Reset mocks for each test
+        if (ollama) {
+            if (ollama.list && typeof ollama.list.mockReset === 'function') {
+                ollama.list.mockReset();
+                ollama.list.mockResolvedValue(MOCK_MODELS);
+            }
+            if (ollama.show && typeof ollama.show.mockReset === 'function') {
+                ollama.show.mockReset();
+                ollama.show.mockResolvedValue({ name: 'gemma3:27b-it-q4_K_M' });
             }
         }
     });
@@ -49,7 +82,8 @@ describe('Model Profile System', () => {
             
             // Verify default profile is active initially
             const defaultProfile = getDefaultProfile();
-            expect(response.body.activeProfile.name).toBe(defaultProfile.name);
+            expect(response.body.activeProfile.name).toBe(defaultProfile.displayName);
+            expect(response.body.activeProfile.displayName).toBe(defaultProfile.displayName);
         });
 
         it('should include required profile properties', async () => {
@@ -68,7 +102,7 @@ describe('Model Profile System', () => {
         it('should require admin authentication', async () => {
             const response = await request(app)
                 .post('/api/models/active')
-                .send({ profileName: modelProfiles[0].name })
+                .send({ profileName: modelProfiles[0].displayName })
                 .expect(403);
 
             expect(response.body).toHaveProperty('error');
@@ -80,11 +114,12 @@ describe('Model Profile System', () => {
             const response = await request(app)
                 .post('/api/models/active')
                 .set('x-admin-secret', ADMIN_SECRET)
-                .send({ profileName: targetProfile.name })
+                .send({ profileName: targetProfile.displayName })
                 .expect(200);
 
             expect(response.body).toHaveProperty('message');
-            expect(response.body.profile.name).toBe(targetProfile.name);
+            expect(response.body.profile.name).toBe(targetProfile.displayName);
+            expect(response.body.profile.displayName).toBe(targetProfile.displayName);
             expect(response.body.profile.modelId).toBe(targetProfile.modelId);
         });
 
@@ -101,11 +136,11 @@ describe('Model Profile System', () => {
 
         it('should persist active profile across server restarts', async () => {
             // Set a profile
-            const targetProfile = modelProfiles[2]; // Use third profile
+            const targetProfile = modelProfiles[1]; // Use second profile
             await request(app)
                 .post('/api/models/active')
                 .set('x-admin-secret', ADMIN_SECRET)
-                .send({ profileName: targetProfile.name })
+                .send({ profileName: targetProfile.displayName })
                 .expect(200);
 
             // Verify it was saved
@@ -113,13 +148,14 @@ describe('Model Profile System', () => {
                 .get('/api/models')
                 .expect(200);
 
-            expect(response.body.activeProfile.name).toBe(targetProfile.name);
+            expect(response.body.activeProfile.name).toBe(targetProfile.displayName);
+            expect(response.body.activeProfile.displayName).toBe(targetProfile.displayName);
             expect(response.body.activeProfile.modelId).toBe(targetProfile.modelId);
 
             // Verify the state file exists and contains correct data
             const stateFileContent = await fs.readFile(stateFilePath, 'utf-8');
             const savedState = JSON.parse(stateFileContent);
-            expect(savedState.activeProfileName).toBe(targetProfile.name);
+            expect(savedState.activeProfileName).toBe(targetProfile.displayName);
         });
     });
 
@@ -143,7 +179,7 @@ describe('Model Profile System', () => {
             const response = await request(app)
                 .post('/api/models/active')
                 .set('x-admin-secret', 'any-secret')
-                .send({ profileName: modelProfiles[0].name })
+                .send({ profileName: modelProfiles[0].displayName })
                 .expect(500);
 
             expect(response.body).toHaveProperty('error');
