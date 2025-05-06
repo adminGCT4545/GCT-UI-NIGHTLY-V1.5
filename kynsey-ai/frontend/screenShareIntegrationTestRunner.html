@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen Share Integration Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        #testControls {
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        #testOutput {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        
+        /* Mock UI elements for testing */
+        #screenShareModal, #annotationTools, #recordingControls {
+            display: none;
+        }
+        
+        #annotationCanvas {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="testControls">
+        <button onclick="screenShareIntegrationTests.runAllTests()">Run Integration Tests</button>
+        <button onclick="clearTestOutput()">Clear Output</button>
+    </div>
+    
+    <div id="testOutput"></div>
+    
+    <!-- Mock UI elements required for integration testing -->
+    <div id="screenShareModal">
+        <div class="modal-content">
+            <h2>Screen Sharing</h2>
+        </div>
+    </div>
+    
+    <div id="sidebarControls">
+        <button id="startScreenShare">Start Sharing</button>
+        <button id="stopScreenShare" disabled>Stop Sharing</button>
+        <button id="toggleRecording" disabled>Start Recording</button>
+    </div>
+    
+    <div id="annotationTools">
+        <button data-tool="pen">Pen</button>
+        <button data-tool="arrow">Arrow</button>
+        <button data-tool="rectangle">Rectangle</button>
+        <button data-tool="highlight">Highlight</button>
+    </div>
+    
+    <div id="recordingControls">
+        <span id="recordingStatus">Recording in progress...</span>
+    </div>
+    
+    <canvas id="annotationCanvas"></canvas>
+    
+    <!-- Load dependencies -->
+    <script src="screenShare.js"></script>
+    <script src="screenShareTests.js"></script>
+    <script src="screenShareIntegrationTests.js"></script>
+    
+    <script>
+        // Override console.log to display in test output
+        const originalLog = console.log;
+        const testOutput = document.getElementById('testOutput');
+        
+        console.log = function() {
+            const args = Array.from(arguments);
+            originalLog.apply(console, args);
+            
+            testOutput.innerHTML += args.join(' ') + '\n';
+        };
+        
+        function clearTestOutput() {
+            testOutput.innerHTML = '';
+        }
+        
+        // Initialize test environment
+        document.addEventListener('DOMContentLoaded', () => {
+            // Override getDisplayMedia to avoid actual screen sharing during tests
+            if (!window.MediaRecorder) {
+                window.MediaRecorder = MockMediaRecorder;
+            }
+            
+            if (!navigator.mediaDevices) {
+                navigator.mediaDevices = {};
+            }
+            
+            navigator.mediaDevices.getDisplayMedia = async () => {
+                return new MockMediaStream();
+            };
+        });
+    </script>
+</body>
+</html>

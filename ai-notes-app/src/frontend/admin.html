@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - User Management</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .pagination { display: flex; justify-content: space-between; align-items: center; }
+        .pagination button { padding: 5px 10px; cursor: pointer; }
+        .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
+        #error-message { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>User Management</h1>
+
+    <div id="error-message"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody id="user-table-body">
+            <!-- User data will be loaded here -->
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <button id="prev-button" disabled>Previous</button>
+        <span id="page-info">Page 1 of 1</span>
+        <button id="next-button" disabled>Next</button>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

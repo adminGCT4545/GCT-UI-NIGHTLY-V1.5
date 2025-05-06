@@ -1,0 +1,13 @@
+{
+  "database": {
+    "path": "./database/notes_app.db"
+  },
+  "ollama": {
+    "model": "llama3",
+    "whisperModel": "whisper"
+  },
+  "storage": {
+    "audio": "../audio_files/"
+  },
+  "roles": ["admin", "editor", "viewer"]
+}

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Notes App</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github.css" id="code-theme">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/languages/typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/languages/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/languages/bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/languages/json.min.js"></script>
+</head>
+<body>
+    <!-- Skip to content link for accessibility -->
+    <a href="#note-content-input" class="skip-to-content">Skip to content</a>
+    
+    <div class="app-container light-mode">
+        <aside class="sidebar sidebar-icons">
+            <button class="icon-button active" title="Notes">📝</button>
+            <button class="icon-button" title="Graph View">🔗</button>
+            <button class="icon-button" title="Audio">🎙️</button>
+            <button class="icon-button" title="Settings">⚙️</button>
+            <button class="icon-button theme-toggle" title="Toggle Theme">🌓</button>
+        </aside>
+
+        <aside class="sidebar sidebar-notes">
+            <div class="app-logo">
+                <h1>AI Notes</h1>
+            </div>
+            <div class="sidebar-header">
+                <button class="collapse-toggle" title="Hide sidebar">◀</button>
+                <span>My Notes</span>
+                <button class="icon-button" id="search-toggle" title="Search">🔍</button>
+            </div>
+            
+            <!-- New search bar -->
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <input type="text" id="search-input" placeholder="Search notes..." />
+                    <button id="clear-search" class="icon-button">✖</button>
+                    <button id="advanced-search-toggle" class="button-secondary">Advanced</button>
+                </div>
+                
+                <!-- Advanced search panel -->
+                <div class="advanced-search-panel">
+                    <h3>Advanced Search</h3>
+                    <form id="advanced-search-form">
+                        <div class="form-group">
+                            <label for="date-from">From Date</label>
+                            <input type="date" id="date-from" />
+                        </div>
+                        <div class="form-group">
+                            <label for="date-to">To Date</label>
+                            <input type="date" id="date-to" />
+                        </div>
+                        <div class="form-group">
+                            <label for="tag-filter">Tags (comma separated)</label>
+                            <input type="text" id="tag-filter" placeholder="journal, research, ideas" />
+                        </div>
+                        <div class="form-group">
+                            <label for="search-mode">Search Type</label>
+                            <select id="search-mode">
+                                <option value="basic">Basic Search</option>
+                                <option value="semantic">Semantic Search (AI)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sort-by">Sort By</label>
+                            <select id="sort-by">
+                                <option value="updated_at">Last Updated</option>
+                                <option value="created_at">Date Created</option>
+                                <option value="title">Title</option>
+                                <option value="relevance">Relevance</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sort-order">Sort Order</label>
+                            <select id="sort-order">
+                                <option value="desc">Newest First</option>
+                                <option value="asc">Oldest First</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="button-primary">Search</button>
+                            <button type="button" id="reset-search" class="button-secondary">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <nav class="folders-navigation">
+                <ul>
+                    <li class="folder-item expanded">
+                        <div class="folder-header">
+                            <span class="folder-toggle">▼</span>
+                            <span class="folder-name">Home</span>
+                        </div>
+                        <ul class="folder-contents">
+                            <li class="folder-item">
+                                <div class="folder-header">
+                                    <span class="folder-toggle">▶</span>
+                                    <span class="folder-name">Projects</span>
+                                </div>
+                            </li>
+                            <li class="note-link">AI Notes App Features</li>
+                            <li class="note-link selected">User Guide</li>
+                            <li class="note-link">Keyboard Shortcuts</li>
+                            <li class="note-link">Frequently Asked Questions</li>
+                            <li class="note-link">Getting Started</li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+            
+            <ul id="notes-ul">
+                <!-- Note titles will be listed here -->
+            </ul>
+            <button id="new-note-btn">New Note</button>
+            
+            <div class="import-section">
+                <h3>Import</h3>
+                <input type="file" id="markdown-import-input" accept=".md">
+                <button id="import-markdown-button">Import Markdown</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="content-header">
+                <div class="breadcrumbs">
+                    <span>Home</span>
+                    <span class="separator">/</span>
+                    <span>User Guide</span>
+                </div>
+                <div class="content-header-actions">
+                    <div class="view-toggle-group">
+                        <button id="edit-view-btn" class="view-toggle active" title="Edit View">Edit</button>
+                        <button id="split-view-btn" class="view-toggle" title="Split View">Split</button>
+                        <button id="preview-view-btn" class="view-toggle" title="Preview">Preview</button>
+                    </div>
+                    <button id="enhance-note-btn" class="primary hidden">✨ Enhance</button>
+                    <button id="save-note-btn" class="primary">💾 Save</button>
+                    <button id="delete-note-btn" class="secondary hidden">🗑️ Delete</button>
+                </div>
+            </header>
+
+            <div class="note-editor">
+                <input type="text" id="note-title-input" placeholder="Note Title" value="User Guide">
+                
+                <div class="tags-container">
+                    <div class="tags-input-container">
+                        <input type="text" id="tag-input" placeholder="Add tags...">
+                        <button id="add-tag-btn" class="tag-button">+</button>
+                    </div>
+                    <div class="tags-list" id="tags-list">
+                        <span class="tag">guide</span>
+                        <span class="tag">help</span>
+                        <span class="tag">documentation</span>
+                    </div>
+                </div>
+                
+                <div class="markdown-toolbar">
+                    <button class="md-tool-btn" title="Bold">B</button>
+                    <button class="md-tool-btn" title="Italic">I</button>
+                    <button class="md-tool-btn" title="Heading">H</button>
+                    <span class="md-tool-separator"></span>
+                    <button class="md-tool-btn" title="Link">🔗</button>
+                    <button class="md-tool-btn" title="Image">🖼️</button>
+                    <button class="md-tool-btn" title="Code">{'</>'}</button>
+                    <span class="md-tool-separator"></span>
+                    <button class="md-tool-btn" title="List">•</button>
+                    <button class="md-tool-btn" title="Numbered List">1.</button>
+                    <span class="md-tool-separator"></span>
+                    <button class="md-tool-btn kynsey-tools-toggle" title="Kynsey Assist Tools">✨</button>
+                </div>
+                
+                <div class="ai-tools-panel">
+                    <h3>Kynsey Assist Tools</h3>
+                    <div class="ai-suggestion-buttons">
+                        <button class="ai-suggestion-btn" data-action="summarize">📝 Summarize</button>
+                        <button class="ai-suggestion-btn" data-action="improve">✨ Improve Writing</button>
+                        <button class="ai-suggestion-btn" data-action="continue">➡️ Continue Writing</button>
+                        <button class="ai-suggestion-btn" data-action="translate">🌎 Translate</button>
+                    </div>
+                    <div class="ai-custom-prompt">
+                        <input type="text" id="ai-prompt-input" placeholder="Ask Kynsey anything...">
+                        <button id="ai-prompt-btn">Ask</button>
+                    </div>
+                    <div class="ai-response-area">
+                        <div class="ai-thinking hidden">
+                            <div class="ai-thinking-animation">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <p>Kynsey is thinking...</p>
+                        </div>
+                        <div id="ai-response" class="hidden">
+                            <!-- AI responses will appear here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="editor-container">
+                    <div class="markdown-editor-pane">
+                        <textarea id="note-content-input" placeholder="Note Content (Markdown supported)"># AI Notes App User Guide
+
+## Welcome to AI Notes App!
+
+This guide helps you get familiar with all the powerful features available in the AI Notes App.
+
+## Key Features
+
+### 1. Rich Text Editing
+- **Markdown Support**: Format your notes with markdown syntax
+- **Split View**: Edit and see the formatted result simultaneously
+- **Real-time Preview**: Watch your formatting as you type
+
+### 2. Knowledge Connections
+- **Wiki-style Links**: Create links between notes using [[Note Name]] syntax
+- **Graph View**: Visualize connections between your notes
+- **Backlinks**: See which notes link to the current note
+
+### 3. Kynsey AI Assistant
+- **Enhance Notes**: Improve your writing with AI suggestions
+- **Summarize**: Generate concise summaries of your notes
+- **Continue Writing**: Let AI help you expand on your ideas
+- **Translate**: Convert your notes to different languages
+
+### 4. Organization
+- **Folder Structure**: Organize notes hierarchically
+- **Tags**: Add tags to notes for easier filtering
+- **Search**: Find notes instantly with full-text search
+
+### 5. Audio Features
+- **Voice Recording**: Record audio directly in notes
+- **Transcription**: Convert speech to text automatically
+
+## Getting Started
+
+To create your first note:
+1. Click the "New Note" button
+2. Give your note a title
+3. Start typing in the editor
+4. Use the markdown toolbar to format text
+5. Save your note
+
+## Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Save | Ctrl+S |
+| Bold | Ctrl+B |
+| Italic | Ctrl+I |
+| Create Link | Ctrl+K |
+
+## Need Help?
+
+Check out the [[Frequently Asked Questions]] for more information or contact support at support@ainotes.app.
+
+Happy note-taking!</textarea>
+                    </div>
+                    
+                    <div class="markdown-preview-pane" id="note-content-display">
+                        <!-- Selected note content (rendered Markdown) will appear here -->
+                    </div>
+                </div>
+
+                <div class="backlinks-section">
+                    <h3>Linked mentions</h3>
+                    <ul class="backlinks-list">
+                        <li class="backlink">
+                            <div class="backlink-header">
+                                <span class="backlink-expand">▼</span>
+                                <a href="#" class="backlink-title">Frequently Asked Questions</a>
+                                <span class="backlink-count">1</span>
+                            </div>
+                            <div class="backlink-context">
+                                <p>For complete details, check out the [[<span class="highlight">User Guide</span>]]</p>
+                            </div>
+                        </li>
+                        <li class="backlink">
+                            <div class="backlink-header">
+                                <span class="backlink-expand">▼</span>
+                                <a href="#" class="backlink-title">Getting Started</a>
+                                <span class="backlink-count">1</span>
+                            </div>
+                            <div class="backlink-context">
+                                <p>This is a quick start guide. For more details, see the [[<span class="highlight">User Guide</span>]].</p>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <h3>Unlinked mentions</h3>
+                    <!-- Empty state for unlinked mentions -->
+                </div>
+
+                <div id="note-audio-player-container">
+                    <!-- Audio player will be inserted here by JavaScript -->
+                </div>
+                
+                <div id="audio-controls" class="hidden">
+                    <h3>Voice Recording</h3>
+                    <div class="audio-btn-group">
+                        <button id="start-recording-btn" class="audio-btn">Start Recording</button>
+                        <button id="stop-recording-btn" class="audio-btn" disabled>Stop Recording</button>
+                    </div>
+                    <button id="transcribe-btn" disabled>Transcribe Recording</button>
+                    <div id="recording-status"></div>
+                </div>
+            </div>
+            
+            <button class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+        </main>
+        
+        <!-- Graph View Panel -->
+        <aside class="graph-view-panel hidden">
+            <div class="graph-view-header">
+                <h2>Graph View</h2>
+                <div class="graph-controls">
+                    <input type="range" id="graph-zoom" min="0.5" max="2" step="0.1" value="1">
+                    <button class="graph-layout-btn" title="Force Layout">Force</button>
+                    <button class="graph-filter-btn" title="Filter Graph">Filter</button>
+                    <button class="graph-close-btn" title="Close Graph">✕</button>
+                </div>
+            </div>
+            <div class="graph-container" id="graph-container">
+                <div class="graph-placeholder">
+                    <!-- This would be replaced by an actual graph visualization -->
+                    <svg width="100%" height="100%" viewBox="0 0 800 600">
+                        <circle cx="400" cy="300" r="8" fill="#7C3AED" />
+                        <text x="400" y="280" text-anchor="middle" fill="currentColor" class="graph-node-label">User Guide</text>
+                        
+                        <circle cx="300" cy="200" r="6" fill="#7C3AED" />
+                        <text x="300" y="190" text-anchor="middle" fill="currentColor" class="graph-node-label">Getting Started</text>
+                        <line x1="400" y1="300" x2="300" y2="200" stroke="currentColor" stroke-width="2" opacity="0.6" />
+                        
+                        <circle cx="250" cy="350" r="6" fill="#7C3AED" />
+                        <text x="250" y="340" text-anchor="middle" fill="currentColor" class="graph-node-label">AI Notes App Features</text>
+                        <line x1="400" y1="300" x2="250" y2="350" stroke="currentColor" stroke-width="2" opacity="0.6" />
+                        
+                        <circle cx="500" cy="200" r="6" fill="#7C3AED" />
+                        <text x="500" y="190" text-anchor="middle" fill="currentColor" class="graph-node-label">Keyboard Shortcuts</text>
+                        <line x1="400" y1="300" x2="500" y2="200" stroke="currentColor" stroke-width="2" opacity="0.6" />
+                        
+                        <circle cx="550" cy="400" r="6" fill="#7C3AED" />
+                        <text x="550" y="390" text-anchor="middle" fill="currentColor" class="graph-node-label">Frequently Asked Questions</text>
+                        <line x1="400" y1="300" x2="550" y2="400" stroke="currentColor" stroke-width="2" opacity="0.6" />
+                    </svg>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="toast-container">
+        <!-- Toast notifications will be inserted here -->
+    </div>
+
+    <!-- Add before the closing body tag -->
+    <div class="keyboard-shortcuts-overlay">
+        <div class="keyboard-shortcuts-modal">
+            <div class="keyboard-shortcuts-header">
+                <h3>Keyboard Shortcuts</h3>
+                <button id="close-shortcuts-btn">&times;</button>
+            </div>
+            <div class="keyboard-shortcuts-content">
+                <div class="shortcut-category">
+                    <h4>Note Management</h4>
+                    <table class="shortcut-table">
+                        <tr>
+                            <td>Create new note</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">N</span></td>
+                        </tr>
+                        <tr>
+                            <td>Save current note</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">S</span></td>
+                        </tr>
+                        <tr>
+                            <td>Delete current note</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">Del</span></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h4>Text Formatting</h4>
+                    <table class="shortcut-table">
+                        <tr>
+                            <td>Bold text</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">B</span></td>
+                        </tr>
+                        <tr>
+                            <td>Italic text</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">I</span></td>
+                        </tr>
+                        <tr>
+                            <td>Insert link</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">K</span></td>
+                        </tr>
+                        <tr>
+                            <td>Insert heading</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">H</span></td>
+                        </tr>
+                        <tr>
+                            <td>Insert code block</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">Shift</span> + <span class="shortcut-key">C</span></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h4>View Controls</h4>
+                    <table class="shortcut-table">
+                        <tr>
+                            <td>Toggle edit view</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">1</span></td>
+                        </tr>
+                        <tr>
+                            <td>Toggle split view</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">2</span></td>
+                        </tr>
+                        <tr>
+                            <td>Toggle preview</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">3</span></td>
+                        </tr>
+                        <tr>
+                            <td>Toggle dark mode</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">D</span></td>
+                        </tr>
+                        <tr>
+                            <td>Show keyboard shortcuts</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">F1</span> or <span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">/</span></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h4>Search & Navigation</h4>
+                    <table class="shortcut-table">
+                        <tr>
+                            <td>Focus search</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">F</span></td>
+                        </tr>
+                        <tr>
+                            <td>Navigate to next note</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Alt</span> + <span class="shortcut-key">↓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Navigate to previous note</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Alt</span> + <span class="shortcut-key">↑</span></td>
+                        </tr>
+                        <tr>
+                            <td>Toggle sidebar</td>
+                            <td class="shortcut-keys"><span class="shortcut-key">Ctrl</span> + <span class="shortcut-key">\\</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add settings panel for markdown themes and encryption -->
+    <div class="settings-panel">
+        <h3>Settings</h3>
+        
+        <div class="settings-section">
+            <h4>Appearance</h4>
+            <div class="form-group">
+                <label for="app-theme-select">App Theme:</label>
+                <select id="app-theme-select">
+                    <option value="light">Light Mode</option>
+                    <option value="dark">Dark Mode</option>
+                    <option value="system">System Default</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="code-theme-select">Code Highlighting Theme:</label>
+                <select id="code-theme-select">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="dracula">Dracula</option>
+                    <option value="nord">Nord</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h4>Storage & Security</h4>
+            <div class="form-group">
+                <label for="encryption-toggle">Local Storage Encryption:</label>
+                <select id="encryption-toggle">
+                    <option value="none">None</option>
+                    <option value="aes-256">AES-256 Encryption</option>
+                </select>
+            </div>
+            
+            <div class="form-group encryption-password-group" style="display: none;">
+                <label for="encryption-password">Encryption Password:</label>
+                <input type="password" id="encryption-password" placeholder="Enter password">
+                <button id="save-encryption-password" class="primary">Save Password</button>
+            </div>
+            
+            <div class="encryption-notice">
+                Note: Enabling encryption protects your local data but requires you to enter your password each time you open the app.
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button id="save-settings" class="primary">Save Settings</button>
+            <button id="reset-settings">Reset to Defaults</button>
+        </div>
+    </div>
+
+    <!-- Include your custom frontend script -->
+    <script src="frontend.js"></script>
+</body>
+</html>

@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYNSEY AI - Green Chip Technology</title>
+    <!-- Added favicon link to prevent 404 error -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15.7.2/prop-types.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        /* Modern Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        /* Header - Modern Dark Style */
+        .header {
+            background-color: #202124;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .hamburger-menu {
+            cursor: pointer;
+            padding-right: 1rem;
+        }
+
+        .hamburger-menu::before {
+            content: "☰";
+            font-size: 1.5rem;
+        }
+
+        .app-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .app-subtitle {
+            font-size: 0.8rem;
+            color: #9aa0a6;
+        }
+
+        /* Sidebar - Dark and Minimal */
+        .sidebar {
+            width: 60px;
+            background-color: #202124;
+            padding: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 1px 0 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-button {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar-button:hover {
+            opacity: 1;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .smile-btn:hover {
+            transform: translateZ(0) scale(1.1);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .smile-btn:active {
+            transform: translateZ(0) scale(0.95);
+        }
+
+        .sidebar-button i, .sidebar-button span {
+            font-size: 1.2rem;
+        }
+
+        /* Main Content Area - Dark Theme Chat */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 1rem;
+            max-width: 80%;
+            clear: both;
+            word-wrap: break-word; /* Ensure long words break */
+            white-space: pre-wrap; /* Preserve whitespace and wrap */
+        }
+
+        .user-message {
+            background-color: #0b84ff;
+            color: white;
+            margin-left: auto;
+            text-align: left; /* Align text left even in right-aligned bubble */
+            align-self: flex-end; /* Align bubble to the right */
+        }
+
+        .assistant-message {
+            background-color: #292a2d;
+            color: #e8e8e8;
+            align-self: flex-start;
+        }
+
+        .assistant-message img, .user-message img {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            display: block; /* Ensure image takes block space */
+        }
+
+        /* Smart suggestions */
+        .smart-suggestions {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+            color: #9aa0a6;
+        }
+        
+        .suggestion-item {
+            display: inline-block;
+            background-color: #3c4043;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            margin-right: 0.5rem;
+            margin-top: 0.3rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #5f6368;
+        }
+
+        /* Code block styling */
+        .code-block {
+            background-color: #1e1e1e;
+            border: 1px solid #3d3d3e;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.75rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            white-space: pre;
+        }
+
+        /* Search results styling */
+        .search-results {
+            background-color: #1e1e1e;
+            border: 1px solid #3d3d3e;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.75rem;
+            width: 100%;
+        }
+        
+        .search-result-item {
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #3d3d3e;
+        }
+        
+        .search-result-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .search-result-title {
+            font-weight: bold;
+            color: #0b84ff;
+            margin-bottom: 0.25rem;
+        }
+        
+        .search-result-url {
+            font-size: 0.8rem;
+            color: #9aa0a6;
+            margin-bottom: 0.25rem;
+            word-break: break-all;
+        }
+        
+        .search-result-snippet {
+            font-size: 0.9rem;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            font-style: italic;
+            color: #9aa0a6;
+        }
+
+        /* Voice input indicator */
+        .voice-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0b84ff;
+            font-size: 0.9rem;
+        }
+        
+        .voice-indicator-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0b84ff;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: #202124;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            padding: 1.5rem;
+            color: #ffffff; /* Ensure text is visible */
+            overflow-y: auto; /* Make scrollable */
+        }
+
+        .settings-panel.active {
+            right: 0;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .close-settings {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .settings-section {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .settings-section-title {
+            font-size: 0.9rem;
+            color: #9aa0a6;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase; /* Style consistency */
+        }
+
+        .settings-option {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            cursor: pointer;
+        }
+         .settings-option label {
+            margin-left: 0.5rem; /* Spacing between radio and label */
+            cursor: pointer;
+        }
+
+        .settings-option input[type="radio"],
+        .settings-option input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: #0b84ff;
+        }
+
+        #activeModelDisplay {
+            padding: 0.5rem;
+            background-color: #3d3d3e;
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        /* Image Upload Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .modal.active {
+            display: flex; /* Show when active */
+        }
+
+        .modal-content {
+            background-color: #202124;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 500px;
+            color: #ffffff; /* Ensure text is visible */
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #3d3d3e;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s ease; /* Smooth transition */
+        }
+
+        .file-upload-area:hover {
+            border-color: #0b84ff;
+        }
+
+        .file-upload-text {
+            color: #9aa0a6;
+            margin-bottom: 1rem;
+        }
+
+        .file-preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin: 1rem auto; /* Center preview */
+            display: none; /* Hidden until image selected */
+            border-radius: 0.25rem; /* Slight rounding */
+        }
+
+        .file-info {
+            color: #e8e8e8;
+            margin: 1rem 0;
+            display: none;
+            word-break: break-all;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1rem; /* Add space above buttons */
+        }
+
+        .modal-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border: none;
+            font-weight: 500; /* Slightly bolder text */
+            transition: background-color 0.2s ease; /* Smooth transition */
+        }
+
+        .modal-button.primary {
+            background-color: #0b84ff;
+            color: white;
+        }
+        .modal-button.primary:hover {
+            background-color: #005ec4;
+        }
+        .modal-button.primary:disabled {
+            background-color: #3d3d3e;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .modal-button.secondary {
+            background-color: #3d3d3e;
+            color: white;
+        }
+         .modal-button.secondary:hover {
+            background-color: #5f6368;
+        }
+
+        /* Input Container - Dark Style */
+        .input-container {
+            background-color: #202124;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .input-form {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end; /* Align items to bottom for multi-line textarea */
+        }
+
+        .input-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .input-action-button {
+            background: transparent;
+            border: none;
+            color: #9aa0a6;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.25rem;
+            transition: color 0.2s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .input-action-button:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .input-action-button.active {
+            color: #0b84ff;
+        }
+
+        .message-input-wrapper {
+            flex: 1;
+            position: relative;
+            background-color: #121212;
+            border: 1px solid #3d3d3e;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+        }
+
+        .message-input-wrapper:focus-within {
+            border-color: #0b84ff;
+            box-shadow: 0 0 0 1px #0b84ff;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.75rem 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            resize: none;
+            background-color: transparent;
+            color: #ffffff;
+            max-height: 150px; /* Limit max height */
+            overflow-y: auto; /* Add scroll if needed */
+            line-height: 1.4; /* Improve readability */
+        }
+
+        .message-input:focus {
+            outline: none;
+        }
+
+        .send-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #0b84ff;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease;
+            height: calc(1.5rem + 2 * 0.75rem); /* Match initial textarea height */
+            align-self: flex-end; /* Keep button aligned to bottom */
+        }
+
+        .send-button:hover {
+            background-color: #005ec4;
+        }
+        .send-button:disabled {
+             background-color: #3d3d3e;
+             cursor: not-allowed;
+             opacity: 0.7;
+        }
+
+        /* File input hidden */
+        #imageFileInput, #documentFileInput {
+            display: none;
+        }
+
+        /* Dark mode tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 120px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Loading overlay styles */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #0b84ff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: white;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .loading-subtext {
+            color: #aaaaaa;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+            max-width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Loading GCT UI...</p>
+        <p class="loading-subtext">Please wait while we initialize the application.</p>
+    </div>
+
+    <div class="sidebar">
+        <button class="sidebar-button" id="newChat" title="New Chat"><span>+</span></button>
+        <button class="sidebar-button" id="documentsBtn" title="Upload Document"><span>&#128196;</span></button>
+        <button class="sidebar-button" id="imagesBtn" title="Upload Image"><span>&#128249;</span></button>
+        <button class="sidebar-button" id="settingsBtn" title="Settings"><span>&#9881;</span></button>
+        <!-- Added Notes App button for linking to AI Notes App -->
+        <button class="sidebar-button" id="notesAppBtn" title="AI Notes App" onclick="window.location.href='http://localhost:3001'" style="background: linear-gradient(45deg, #9C27B0, #673AB7); color: white; position: relative; transform: translateZ(0); transition: all 0.3s ease;"><span style="font-size: 1.4rem;">📝</span><div class="tooltip"><span class="tooltip-text" style="width: 160px; background: rgba(0,0,0,0.9);">Open AI Notes App</span></div></button>
+        <!-- Updated SMILE Dashboard button to ensure proper linking -->
+        <button class="sidebar-button smile-btn" id="erpDashboardBtn" title="SMILE Dashboard" onclick="window.location.href='/erp-dashboard'" style="background: linear-gradient(45deg, #4CAF50, #2196F3); color: white; position: relative; transform: translateZ(0); transition: all 0.3s ease;"><span style="font-size: 1.4rem;">📊</span><div class="tooltip"><span class="tooltip-text" style="width: 160px; background: rgba(0,0,0,0.9);">Access SMILE Dashboard</span></div></button>
+    </div>
+
+    <div class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <div class="app-info">
+                    <h1 class="app-title">KYNSEY AI</h1>
+                    <p class="app-subtitle">Green Chip Technology</p>
+                </div>
+            </div>
+            <div>
+                <!-- Additional header elements can go here -->
+            </div>
+        </header>
+
+        <main class="chat-container" id="chatContainer">
+            <!-- Initial welcome message will be added by JS -->
+        </main>
+
+        <div class="input-container">
+            <form class="input-form" id="chatForm">
+                <div class="input-actions">
+                    <button type="button" class="input-action-button tooltip" id="attachImageBtn" title="Attach Image">
+                        &#128247;
+                        <span class="tooltip-text">Upload Image</span>
+                    </button>
+                    <button type="button" class="input-action-button tooltip" id="attachDocBtn" title="Attach Document">
+                        &#128196;
+                        <span class="tooltip-text">Upload Document</span>
+                    </button>
+                    <button type="button" class="input-action-button tooltip" id="voiceInputBtn" title="Voice Input">
+                        &#127908;
+                        <span class="tooltip-text">Voice Input</span>
+                    </button>
+                </div>
+                <div class="message-input-wrapper">
+                    <textarea
+                        class="message-input"
+                        id="messageInput"
+                        placeholder="Type your message or use commands: /search, /email..."
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button type="submit" class="send-button" id="sendButton">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2 class="settings-title">Settings</h2>
+            <button class="close-settings" id="closeSettings">&times;</button>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-section-title">RESPONSE STYLE</h3>
+            <div class="settings-option">
+                <input type="radio" id="professionalStyle" name="responseStyle" value="professional">
+                <label for="professionalStyle">Professional</label>
+            </div>
+            <div class="settings-option">
+                <input type="radio" id="conciseStyle" name="responseStyle" value="concise">
+                <label for="conciseStyle">Concise</label>
+            </div>
+            <div class="settings-option">
+                <input type="radio" id="normalStyle" name="responseStyle" value="normal" checked>
+                <label for="normalStyle">Normal</label>
+            </div>
+            <div class="settings-option">
+                <input type="radio" id="creativeStyle" name="responseStyle" value="creative">
+                <label for="creativeStyle">Creative</label>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-section-title">FEATURES</h3>
+            <div class="settings-option">
+                <input type="checkbox" id="enableSuggestions" name="enableSuggestions" checked>
+                <label for="enableSuggestions">Show Smart Suggestions</label>
+            </div>
+            <div class="settings-option">
+                <input type="checkbox" id="enableWebSearch" name="enableWebSearch" checked>
+                <label for="enableWebSearch">Enable Web Search</label>
+            </div>
+            <div class="settings-option">
+                <input type="checkbox" id="enableVoiceInput" name="enableVoiceInput" checked>
+                <label for="enableVoiceInput">Enable Voice Input</label>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-section-title">ACTIVE MODEL</h3>
+            <div id="activeModelDisplay">llama3.2:3b-instruct-fp16</div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-section-title">CONVERSATION HISTORY</h3>
+            <button id="clearHistory" style="padding: 0.5rem 1rem; background-color: #dc3545; color: white; border: none; border-radius: 0.25rem; cursor: pointer; width: 100%;">
+                Clear Conversation History
+            </button>
+        </div>
+         <div class="settings-section">
+            <h3 class="settings-section-title">ADMIN</h3>
+             <button id="goToAdmin" style="padding: 0.5rem 1rem; background-color: #3d3d3e; color: white; border: none; border-radius: 0.25rem; cursor: pointer; width: 100%;" onclick="window.location.href='admin_panel.html'">
+                Go to Admin Panel
+            </button>
+        </div>
+    </div>
+
+    <!-- Image Upload Modal -->
+    <div class="modal" id="imageUploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Image</h2>
+                <button class="close-modal" id="closeImageModal">&times;</button>
+            </div>
+            <div class="file-upload-area" id="imageDropArea">
+                <p class="file-upload-text">Drag & drop an image or click to browse</p>
+                <input type="file" id="imageFileInput" accept="image/jpeg, image/png, image/gif, image/webp">
+                <img src="" alt="Preview" class="file-preview" id="imagePreview">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button secondary" id="cancelImageUpload">Cancel</button>
+                <button class="modal-button primary" id="confirmImageUpload" disabled>Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Upload Modal -->
+    <div class="modal" id="documentUploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Document</h2>
+                <button class="close-modal" id="closeDocumentModal">&times;</button>
+            </div>
+            <div class="file-upload-area" id="documentDropArea">
+                <p class="file-upload-text">Drag & drop a document (PDF, DOCX, CSV, TXT) or click to browse</p>
+                <input type="file" id="documentFileInput" accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx">
+                <div class="file-info" id="documentInfo">
+                    <p>Selected file: <strong id="documentFilename"></strong></p>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button secondary" id="cancelDocumentUpload">Cancel</button>
+                <button class="modal-button primary" id="confirmDocumentUpload" disabled>Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Immediately remove loading overlay for development/testing
+        function removeLoadingOverlay() {
+            console.log("Removing loading overlay...");
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                    console.log("Loading overlay removed");
+                }, 500);
+            } else {
+                console.error("Loading overlay element not found");
+            }
+        }
+
+        // DOM Elements
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+        const chatContainer = document.getElementById('chatContainer');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const closeSettings = document.getElementById('closeSettings');
+        const imagesBtn = document.getElementById('imagesBtn');
+        const documentsBtn = document.getElementById('documentsBtn');
+        const imageUploadModal = document.getElementById('imageUploadModal');
+        const documentUploadModal = document.getElementById('documentUploadModal');
+        const closeImageModal = document.getElementById('closeImageModal');
+        const closeDocumentModal = document.getElementById('closeDocumentModal');
+        const imageDropArea = document.getElementById('imageDropArea');
+        const documentDropArea = document.getElementById('documentDropArea');
+        const imageFileInput = document.getElementById('imageFileInput');
+        const documentFileInput = document.getElementById('documentFileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const documentInfo = document.getElementById('documentInfo');
+        const documentFilename = document.getElementById('documentFilename');
+        const confirmImageUpload = document.getElementById('confirmImageUpload');
+        const confirmDocumentUpload = document.getElementById('confirmDocumentUpload');
+        const cancelImageUpload = document.getElementById('cancelImageUpload');
+        const cancelDocumentUpload = document.getElementById('cancelDocumentUpload');
+        const clearHistory = document.getElementById('clearHistory');
+        const newChat = document.getElementById('newChat');
+        const responseStyleOptions = document.querySelectorAll('input[name="responseStyle"]');
+        const sendButton = document.getElementById('sendButton');
+        const activeModelDisplay = document.getElementById('activeModelDisplay');
+        const attachImageBtn = document.getElementById('attachImageBtn');
+        const attachDocBtn = document.getElementById('attachDocBtn');
+        const voiceInputBtn = document.getElementById('voiceInputBtn');
+        const enableSuggestions = document.getElementById('enableSuggestions');
+        const enableWebSearch = document.getElementById('enableWebSearch');
+        const enableVoiceInput = document.getElementById('enableVoiceInput');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const erpDashboardBtn = document.getElementById('erpDashboardBtn');
+
+        // Ensure ERP dashboard button works
+        if (erpDashboardBtn) {
+            erpDashboardBtn.addEventListener('click', function() {
+                console.log("ERP Dashboard button clicked");
+                window.location.href = '/erp-dashboard';
+            });
+        }
+
+        // Global variables
+        let selectedImageData = null;
+        let selectedDocumentData = null;
+        let conversationHistory = [];
+        let currentResponseStyle = 'normal';
+        let isWaitingForResponse = false;
+        let isRecording = false;
+        let isBackendConnected = false;
+
+        // API endpoint
+        const API_ENDPOINT = 'http://localhost:3002/api/chat';
+
+        // --- Initialization ---
+        function initializeChat() {
+            console.log("Initializing chat...");
+            
+            // Hide loading overlay immediately
+            removeLoadingOverlay();
+            
+            // Add welcome message
+            addWelcomeMessage();
+
+            // Load response style
+            const savedStyle = localStorage.getItem('kynseyResponseStyle');
+            if (savedStyle) {
+                currentResponseStyle = savedStyle;
+                const styleOption = document.querySelector(`input[name="responseStyle"][value="${currentResponseStyle}"]`);
+                if (styleOption) styleOption.checked = true;
+            }
+
+            // Load feature settings
+            if (localStorage.getItem('kynseyEnableSuggestions') === 'false') {
+                if (enableSuggestions) enableSuggestions.checked = false;
+            }
+            if (localStorage.getItem('kynseyEnableWebSearch') === 'false') {
+                if (enableWebSearch) enableWebSearch.checked = false;
+            }
+            if (localStorage.getItem('kynseyEnableVoiceInput') === 'false') {
+                if (enableVoiceInput) enableVoiceInput.checked = false;
+            }
+
+            if (activeModelDisplay) activeModelDisplay.textContent = 'llama3.2:3b-instruct-fp16';
+            console.log("Chat initialized successfully");
+        }
+        
+        function addWelcomeMessage() {
+            addMessage('Hello! Welcome to KYNSEY AI. You can navigate to the SMILE Dashboard using the 📊 button in the sidebar.', 'assistant-message', false, [
+                'How do I access the ERP dashboard?',
+                'What can KYNSEY AI do?',
+                'Show me SMILE features'
+            ]);
+        }
+
+        function addMessage(text, className, save = true, suggestions = []) {
+            if (!chatContainer) {
+                console.error("Chat container element not found");
+                return;
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', className);
+            
+            // Simple text for now
+            messageDiv.textContent = text;
+            
+            // Add suggestions if provided
+            if (className === 'assistant-message' && suggestions.length > 0) {
+                const suggestionsDiv = document.createElement('div');
+                suggestionsDiv.classList.add('smart-suggestions');
+                
+                const suggestionsLabel = document.createElement('span');
+                suggestionsLabel.textContent = 'Suggestions: ';
+                suggestionsDiv.appendChild(suggestionsLabel);
+                
+                suggestions.forEach(suggestion => {
+                    const suggestionItem = document.createElement('span');
+                    suggestionItem.classList.add('suggestion-item');
+                    suggestionItem.textContent = suggestion;
+                    suggestionItem.dataset.suggestion = suggestion;
+                    suggestionsDiv.appendChild(suggestionItem);
+                });
+                
+                messageDiv.appendChild(suggestionsDiv);
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
+            
+            // Save to history and local storage if required
+            if (save) {
+                const role = className === 'user-message' ? 'user' : 'assistant';
+                const messageObj = { 
+                    role: role, 
+                    content: text,
+                    suggestions: role === 'assistant' ? suggestions : []
+                };
+                conversationHistory.push(messageObj);
+                saveState();
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('kynseyConversationHistory', JSON.stringify(conversationHistory));
+            } catch (e) {
+                console.error("Error saving conversation history:", e);
+            }
+        }
+
+        // Initialize UI as soon as possible
+        try {
+            console.log("Document loaded, initializing page...");
+            initializeChat();
+        } catch (error) {
+            console.error("Error during initialization:", error);
+            removeLoadingOverlay(); // Make sure to remove loading even if there's an error
+        }
+
+        // Add a backup initialization method
+        window.addEventListener('load', function() {
+            console.log("Window fully loaded");
+            if (document.getElementById('loadingOverlay') && 
+                document.getElementById('loadingOverlay').style.display !== 'none') {
+                console.log("Loading overlay still visible, removing...");
+                removeLoadingOverlay();
+                
+                // Try initializing again if needed
+                if (!chatContainer || !chatContainer.children.length) {
+                    console.log("Chat container empty, reinitializing...");
+                    initializeChat();
+                }
+            }
+        });
+
+        // Register event handler for the messages
+        if (chatContainer) {
+            chatContainer.addEventListener('click', function(event) {
+                if (event.target.classList.contains('suggestion-item')) {
+                    const suggestion = event.target.dataset.suggestion;
+                    if (messageInput) {
+                        messageInput.value = suggestion;
+                        messageInput.focus();
+                    }
+                }
+            });
+        }
+
+        // Initialize layout even sooner
+        removeLoadingOverlay();
+    </script>
+</body>
+</html>
